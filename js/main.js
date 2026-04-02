@@ -147,7 +147,7 @@ function buildCard(movie) {
   const saved     = favorites.includes(movie.id);
   const posterUrl = getPosterUrl(movie);
   const posterEl  = posterUrl
-    ? `<img src="${posterUrl}" alt="${movie.title}" loading="lazy" onerror="this.parentElement.innerHTML=fallbackPoster('${movie.title}')">`
+    ? `<img src="${posterUrl}" alt="${movie.title.replace(/"/g, '&quot;')}" loading="lazy" onerror="this.outerHTML=fallbackPoster(this.alt)">`
     : fallbackPoster(movie.title);
 
   return `
@@ -190,8 +190,18 @@ function openModal(id) {
   const saved     = favorites.includes(id);
   const posterUrl = getPosterUrl(movie);
   const posterEl  = posterUrl
-    ? `<img src="${posterUrl}" alt="${movie.title}" onerror="this.outerHTML='<div class=\\"modal-poster-fallback\\"><i class=\\"fas fa-film\\"></i><span>${movie.title}</span></div>'">`
+    ? `<img src="${posterUrl}" alt="${movie.title.replace(/"/g, '&quot;')}" onerror="this.outerHTML='<div class=\\'modal-poster-fallback\\'><i class=\\'fas fa-film\\'></i><span>' + this.alt + '</span></div>'">`
     : `<div class="modal-poster-fallback"><i class="fas fa-film"></i><span>${movie.title}</span></div>`;
+
+  let trailerHTML = '';
+  if (movie.trailerUrl) {
+    trailerHTML = `
+      <div class="modal-trailer" style="margin-top: 1.5rem;">
+        <p class="modal-section-title">Trailer</p>
+        <iframe width="100%" height="215" src="${movie.trailerUrl}" title="YouTube trailer" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius: 8px;"></iframe>
+      </div>
+    `;
+  }
 
   $("modalContent").innerHTML = `
     <div class="modal-poster-col">${posterEl}</div>
@@ -215,7 +225,8 @@ function openModal(id) {
           ${movie.platforms.map(p => `<span class="chip-sm chip-platform">${p}</span>`).join("")}
         </div>
       </div>
-      <button class="modal-save-btn ${saved ? "active" : ""}" id="modalSaveBtn" data-id="${id}">
+      ${trailerHTML}
+      <button class="modal-save-btn ${saved ? "active" : ""}" id="modalSaveBtn" data-id="${id}" style="margin-top: 1rem;">
         <i class="${saved ? "fas" : "far"} fa-bookmark"></i>
         ${saved ? "Remove from Saved" : "Save Movie"}
       </button>

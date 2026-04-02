@@ -22,6 +22,7 @@ const moviesData = [
     plot: "Tanjiro and his comrades face Muzan's strongest demons in an endless labyrinth where time and space twist beyond imagination.",
     cast: ["Natsuki Hanae", "Akari Kito", "Yoshitsugu Matsuoka"],
     platforms: ["Crunchyroll", "Funimation"],
+    trailerUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
     tmdbPoster: "/fwJO6qhCPDCXEBHXigTaVl9gBb7.jpg",
     localPoster: null
   },
@@ -34,6 +35,7 @@ const moviesData = [
     plot: "Denji faces his most dangerous enemy yet — the mysterious Reze, who harbors secrets that could destroy everything he holds dear.",
     cast: ["Kikunosuke Toya", "Tomori Kusunoki", "Shiori Izawa"],
     platforms: ["Crunchyroll", "Netflix"],
+    trailerUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
     tmdbPoster: "/zN41DPmPhwmgJjHwezALdrdvD0h.jpg",
     localPoster: null
   },
@@ -46,6 +48,7 @@ const moviesData = [
     plot: "Paul Atreides unites with Chani and the Fremen while seeking revenge against the conspirators who destroyed his family.",
     cast: ["Timothée Chalamet", "Zendaya", "Rebecca Ferguson"],
     platforms: ["HBO Max", "Amazon Prime"],
+    trailerUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
     tmdbPoster: "/1pdfLvkbY9ohJlCjQH2CZjjYVvJ.jpg",
     localPoster: null
   },
@@ -58,6 +61,7 @@ const moviesData = [
     plot: "The story of American scientist J. Robert Oppenheimer and his role in the development of the atomic bomb during World War II.",
     cast: ["Cillian Murphy", "Emily Blunt", "Matt Damon"],
     platforms: ["Peacock", "Amazon Prime"],
+    trailerUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
     tmdbPoster: "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
     localPoster: null
   },
@@ -70,6 +74,7 @@ const moviesData = [
     plot: "Miles Morales catapults across the Multiverse, where he encounters a team of Spider-People charged with protecting its very existence.",
     cast: ["Shameik Moore", "Hailee Steinfeld", "Oscar Isaac"],
     platforms: ["Netflix", "Disney+"],
+    trailerUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
     tmdbPoster: "/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg",
     localPoster: null
   },
@@ -82,6 +87,7 @@ const moviesData = [
     plot: "When a sadistic serial killer begins murdering key political figures in Gotham, Batman is forced to investigate the city's hidden corruption.",
     cast: ["Robert Pattinson", "Zoë Kravitz", "Paul Dano"],
     platforms: ["HBO Max", "Amazon Prime"],
+    trailerUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
     tmdbPoster: "/74xTEgt7R36Fpooo50r9T25onhq.jpg",
     localPoster: null
   },
@@ -94,6 +100,7 @@ const moviesData = [
     plot: "A middle-aged Chinese immigrant is swept up into an insane adventure in which she alone can save existence by exploring other universes.",
     cast: ["Michelle Yeoh", "Stephanie Hsu", "Ke Huy Quan"],
     platforms: ["Netflix", "Showtime"],
+    trailerUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
     tmdbPoster: "/w3LxiVYdWWRvEVdn5RYq6jIqkb1.jpg",
     localPoster: null
   },
@@ -106,6 +113,7 @@ const moviesData = [
     plot: "A team of explorers travel through a wormhole in space in an attempt to ensure humanity's survival against a dying Earth.",
     cast: ["Matthew McConaughey", "Anne Hathaway", "Jessica Chastain"],
     platforms: ["Netflix", "Amazon Prime", "Paramount+"],
+    trailerUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
     tmdbPoster: "/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
     localPoster: null
   },
@@ -118,6 +126,7 @@ const moviesData = [
     plot: "John Wick uncovers a path to defeating The High Table, but before he can earn his freedom he must face off against a new enemy.",
     cast: ["Keanu Reeves", "Donnie Yen", "Bill Skarsgård"],
     platforms: ["Lionsgate+", "Amazon Prime"],
+    trailerUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
     tmdbPoster: "/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg",
     localPoster: null
   },
@@ -130,6 +139,7 @@ const moviesData = [
     plot: "Barbie and Ken are having the time of their lives in the colorful and seemingly perfect world of Barbie Land.",
     cast: ["Margot Robbie", "Ryan Gosling", "America Ferrera"],
     platforms: ["HBO Max", "Netflix"],
+    trailerUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
     tmdbPoster: "/iuFNMS8vlbZxOkIGUN9ggvEMgFV.jpg",
     localPoster: null
   },
@@ -142,6 +152,7 @@ const moviesData = [
     plot: "Two imprisoned men bond over a number of years, finding solace and eventual redemption through acts of common decency.",
     cast: ["Tim Robbins", "Morgan Freeman", "Bob Gunton"],
     platforms: ["Netflix", "Amazon Prime"],
+    trailerUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
     tmdbPoster: "/q6y0Go1tsGEsmtFryDOJo3dEmqu.jpg",
     localPoster: null
   },
@@ -154,6 +165,7 @@ const moviesData = [
     plot: "When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests.",
     cast: ["Christian Bale", "Heath Ledger", "Aaron Eckhart"],
     platforms: ["HBO Max", "Amazon Prime"],
+    trailerUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
     tmdbPoster: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
     localPoster: null
   },
@@ -166,6 +178,7 @@ const moviesData = [
     plot: "Greed and class discrimination threaten the newly formed symbiotic relationship between the wealthy Park family and the destitute Kim clan.",
     cast: ["Song Kang-ho", "Lee Sun-kyun", "Cho Yeo-jeong"],
     platforms: ["Hulu", "Amazon Prime"],
+    trailerUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
     tmdbPoster: "/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
     localPoster: null
   },
@@ -178,6 +191,7 @@ const moviesData = [
     plot: "During her family's move to the suburbs, a sullen 10-year-old girl wanders into a world ruled by gods, witches, and spirits.",
     cast: ["Daveigh Chase", "Suzanne Pleshette", "Miyu Irino"],
     platforms: ["Netflix", "HBO Max"],
+    trailerUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
     tmdbPoster: "/39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
     localPoster: null
   },
@@ -190,6 +204,7 @@ const moviesData = [
     plot: "A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea into the mind of a CEO.",
     cast: ["Leonardo DiCaprio", "Joseph Gordon-Levitt", "Elliot Page"],
     platforms: ["Netflix", "HBO Max"],
+    trailerUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
     tmdbPoster: "/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg",
     localPoster: null
   },
@@ -202,6 +217,7 @@ const moviesData = [
     plot: "The incredible tale about the fantastical evolution of Bella Baxter, a young woman brought back to life by the brilliant and unorthodox scientist Dr. Godwin Baxter.",
     cast: ["Emma Stone", "Mark Ruffalo", "Willem Dafoe"],
     platforms: ["Disney+", "Hulu"],
+    trailerUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
     tmdbPoster: "/kCGlIMHnOm8JPXq3rXM6c5wkWtI.jpg",
     localPoster: null
   },
@@ -214,6 +230,7 @@ const moviesData = [
     plot: "Members of the Osage Nation are murdered under mysterious circumstances in the 1920s, sparking a major FBI investigation.",
     cast: ["Leonardo DiCaprio", "Robert De Niro", "Lily Gladstone"],
     platforms: ["Apple TV+"],
+    trailerUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
     tmdbPoster: "/dB6ZpFVmF8WHgfHsBQUbXUWUvGQ.jpg",
     localPoster: null
   },
@@ -226,6 +243,7 @@ const moviesData = [
     plot: "A toilet cleaner in Tokyo is content with his simple life, listening to cassette tapes and photographing trees, until two encounters challenge his carefully maintained equilibrium.",
     cast: ["Kōji Yakusho", "Tokio Emoto", "Arisa Nakano"],
     platforms: ["MUBI"],
+    trailerUrl: "https://www.youtube.com/embed/jfKfPfyJRdk",
     tmdbPoster: "/lRlff6I6t2Kx6YWPB8bZALbNEL.jpg",
     localPoster: null
   }
