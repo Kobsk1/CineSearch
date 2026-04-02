@@ -9,10 +9,18 @@ let currentSort    = "default";
 let currentView    = "home"; // "home" | "search" | "favorites"
 
 /* ─── Init ─── */
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  const rawFavs = JSON.parse(localStorage.getItem("cs_favorites") || "[]");
+  if (rawFavs.length > 0 && typeof rawFavs[0] !== 'object') {
+    localStorage.removeItem("cs_favorites");
+  }
+  
   loadFavorites();
   bindEvents();
+  
+  await fetchGenres();
   populateGenreFilters();
+  
   updateFavBadge();
   showHome();
 });
@@ -84,27 +92,28 @@ function showHome() {
   $("resultsSection").style.display = "none";
 }
 
-function doSearch() {
+async function doSearch() {
   const term = $("searchInput").value.trim();
   currentFilters.searchTerm = term;
   currentView = "search";
 
-  const filtered = filterMovies(moviesData, currentFilters);
-  currentMovies   = sortMovies(filtered, currentSort);
-
   $("hero").style.display = "none";
   $("resultsSection").style.display = "block";
+  $("resultsTitle").textContent = "Loading...";
+  $("resultsGrid").innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading movies...</p></div>';
+
+  currentMovies = await fetchMovies(currentFilters, currentSort);
+
   $("resultsTitle").textContent = term ? `Results for "${term}"` : "All Movies";
   renderResults();
 }
 
 function showFavorites() {
   currentView = "favorites";
-  const faved = moviesData.filter(m => favorites.includes(m.id));
-  currentMovies = sortMovies(faved, currentSort);
+  currentMovies = sortMovies(favorites, currentSort);
   $("hero").style.display = "none";
   $("resultsSection").style.display = "block";
-  $("resultsTitle").textContent = `Saved Movies (${faved.length})`;
+  $("resultsTitle").textContent = `Saved Movies (${currentMovies.length})`;
   renderResults();
 }
 
@@ -123,7 +132,6 @@ function renderResults() {
 
   grid.innerHTML = currentMovies.map(m => buildCard(m)).join("");
 
-  // Card click → modal
   grid.querySelectorAll(".movie-card").forEach(card => {
     card.addEventListener("click", e => {
       if (!e.target.closest(".save-btn")) openModal(+card.dataset.id);
@@ -135,16 +143,19 @@ function renderResults() {
     btn.addEventListener("click", e => {
       e.stopPropagation();
       const id = +btn.dataset.id;
-      toggleFavorite(id);
-      btn.classList.toggle("active", favorites.includes(id));
-      btn.querySelector("i").className = favorites.includes(id) ? "fas fa-bookmark" : "far fa-bookmark";
+      const movie = currentMovies.find(m => m.id === id);
+      if (movie) toggleFavorite(movie);
+      
+      const isSaved = favorites.some(f => f.id === id);
+      btn.classList.toggle("active", isSaved);
+      btn.querySelector("i").className = isSaved ? "fas fa-bookmark" : "far fa-bookmark";
       if (currentView === "favorites") showFavorites();
     });
   });
 }
 
 function buildCard(movie) {
-  const saved     = favorites.includes(movie.id);
+  const saved     = favorites.some(f => f.id === movie.id);
   const posterUrl = getPosterUrl(movie);
   const posterEl  = posterUrl
     ? `<img src="${posterUrl}" alt="${movie.title.replace(/"/g, '&quot;')}" loading="lazy" onerror="this.outerHTML=fallbackPoster(this.alt)">`
@@ -183,11 +194,18 @@ function fallbackPoster(title) {
 }
 
 /* ─── Modal ─── */
-function openModal(id) {
-  const movie = moviesData.find(m => m.id === id);
-  if (!movie) return;
+async function openModal(id) {
+  $("modalBackdrop").classList.add("active");
+  document.body.style.overflow = "hidden";
+  $("modalContent").innerHTML = '<div style="width:100%;text-align:center;padding:4rem;"><i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--primary);"></i><p style="margin-top:1rem;">Loading details...</p></div>';
 
-  const saved     = favorites.includes(id);
+  const movie = await fetchMovieDetails(id);
+  if (!movie) {
+    $("modalContent").innerHTML = '<div style="text-align:center;padding:2rem;">Failed to load movie details.</div>';
+    return;
+  }
+
+  const saved     = favorites.some(f => f.id === id);
   const posterUrl = getPosterUrl(movie);
   const posterEl  = posterUrl
     ? `<img src="${posterUrl}" alt="${movie.title.replace(/"/g, '&quot;')}" onerror="this.outerHTML='<div class=\\'modal-poster-fallback\\'><i class=\\'fas fa-film\\'></i><span>' + this.alt + '</span></div>'">`
@@ -216,13 +234,13 @@ function openModal(id) {
       <div>
         <p class="modal-section-title">Cast</p>
         <div class="chips-row">
-          ${movie.cast.map(a => `<span class="chip-sm">${a}</span>`).join("")}
+          ${movie.cast.length ? movie.cast.map(a => `<span class="chip-sm">${a}</span>`).join("") : '<span>N/A</span>'}
         </div>
       </div>
       <div>
-        <p class="modal-section-title">Available on</p>
+        <p class="modal-section-title">Available on (US)</p>
         <div class="chips-row">
-          ${movie.platforms.map(p => `<span class="chip-sm chip-platform">${p}</span>`).join("")}
+          ${movie.platforms.length ? movie.platforms.map(p => `<span class="chip-sm chip-platform">${p}</span>`).join("") : '<span>Unavailable / Unknown</span>'}
         </div>
       </div>
       ${trailerHTML}
@@ -232,11 +250,8 @@ function openModal(id) {
       </button>
     </div>`;
 
-  $("modalBackdrop").classList.add("active");
-  document.body.style.overflow = "hidden";
-
   $("modalSaveBtn").addEventListener("click", () => {
-    toggleFavorite(id);
+    toggleFavorite(movie);
     openModal(id); // refresh
     if (currentView === "favorites") showFavorites();
     else if (currentView === "search") renderResults();
@@ -249,10 +264,10 @@ function closeModal() {
 }
 
 /* ─── Favorites ─── */
-function toggleFavorite(id) {
-  const idx = favorites.indexOf(id);
+function toggleFavorite(movie) {
+  const idx = favorites.findIndex(f => f.id === movie.id);
   if (idx === -1) {
-    favorites.push(id);
+    favorites.push(movie);
     showToast("Saved to your list");
   } else {
     favorites.splice(idx, 1);
