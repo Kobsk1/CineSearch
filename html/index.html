@@ -1,140 +1,132 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>CineSearch - Find Your Next Favorite Movie</title>
-    <link rel="stylesheet" href="../css/style.css">
-    <link rel="stylesheet" href="../css/components.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CineSearch — Find Your Next Watch</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link rel="stylesheet" href="../css/style.css" />
+  <link rel="stylesheet" href="../css/components.css" />
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="nav-container">
-            <div class="logo">
-                <i class="fas fa-film"></i>
-                <span>CineSearch</span>
-            </div>
-            <div class="nav-links">
-                <button class="nav-btn" id="homeBtn">
-                    <i class="fas fa-home"></i>
-                    <span>Home</span>
-                </button>
-                <button class="nav-btn" id="favoritesBtn">
-                    <i class="fas fa-heart"></i>
-                    <span>Favorites</span>
-                    <span class="favorites-count" id="favoritesCount">0</span>
-                </button>
-                <button class="nav-btn" id="filterBtn">
-                    <i class="fas fa-sliders-h"></i>
-                    <span>Filter</span>
-                </button>
-                <button class="nav-btn theme-toggle" id="themeToggle">
-                    <i class="fas fa-moon"></i>
-                </button>
-            </div>
-        </div>
-    </nav>
 
-    <!-- Hero Section -->
-    <section class="hero" id="hero">
-        <div class="hero-content">
-            <h1 class="hero-title">Can't decide what to watch?</h1>
-            <p class="hero-subtitle">Discover your next favorite movie with personalized recommendations</p>
-            <div class="search-container">
-                <div class="search-box">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="searchInput" placeholder="Search by title, genre, or keyword...">
-                    <button id="searchBtn" class="search-btn">Find Movie</button>
-                </div>
-            </div>
-            <div class="trending-tags">
-                <span class="tag">Action</span>
-                <span class="tag">Drama</span>
-                <span class="tag">Animation</span>
-                <span class="tag">Sci-Fi</span>
-                <span class="tag">Romance</span>
-            </div>
-        </div>
-    </section>
-
-    <!-- Results Section (hidden initially) -->
-    <section class="results-section" id="resultsSection" style="display: none;">
-        <div class="results-header">
-            <h2 id="resultsTitle">Search Results</h2>
-            <div class="sort-container">
-                <label for="sortSelect">Sort by:</label>
-                <select id="sortSelect">
-                    <option value="default">Relevance</option>
-                    <option value="latest">Latest to Oldest</option>
-                    <option value="oldest">Oldest to Latest</option>
-                    <option value="highest-rated">Highest Rated</option>
-                    <option value="lowest-rated">Lowest Rated</option>
-                    <option value="highest-vibe">Highest Vibe Match</option>
-                </select>
-            </div>
-        </div>
-        <div class="results-grid" id="resultsGrid">
-            <!-- Movie cards will be inserted here -->
-        </div>
-    </section>
-
-    <!-- Filter Side Panel -->
-    <div class="filter-panel" id="filterPanel">
-        <div class="filter-header">
-            <h3>Filters</h3>
-            <button id="closeFilterBtn" class="close-filter">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div class="filter-content">
-            <div class="filter-section">
-                <h4>Genres</h4>
-                <div class="genre-filters" id="genreFilters">
-                    <!-- Genres will be populated from JS -->
-                </div>
-            </div>
-            <div class="filter-section">
-                <h4>Year Range</h4>
-                <div class="year-range">
-                    <input type="number" id="minYear" placeholder="Min Year" min="1900" max="2024">
-                    <span>to</span>
-                    <input type="number" id="maxYear" placeholder="Max Year" min="1900" max="2024">
-                </div>
-            </div>
-            <div class="filter-section">
-                <h4>Minimum Rating</h4>
-                <input type="range" id="minRating" min="0" max="10" step="0.5" value="0">
-                <span id="ratingValue">0</span> / 10
-            </div>
-            <button id="applyFiltersBtn" class="apply-filters">Apply Filters</button>
-            <button id="resetFiltersBtn" class="reset-filters">Reset All</button>
-        </div>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a class="logo" href="#" id="homeLogoBtn">
+        <i class="fas fa-film"></i>
+        <span>CineSearch</span>
+      </a>
+      <div class="nav-actions">
+        <button class="nav-btn" id="homeBtn" title="Home">
+          <i class="fas fa-home"></i><span>Home</span>
+        </button>
+        <button class="nav-btn" id="favoritesBtn" title="Favorites">
+          <i class="fas fa-bookmark"></i><span>Saved</span>
+          <span class="fav-badge" id="favoritesCount">0</span>
+        </button>
+        <button class="nav-btn" id="filterBtn" title="Filter">
+          <i class="fas fa-sliders-h"></i><span>Filter</span>
+        </button>
+        <button class="icon-btn theme-btn" id="themeToggle" title="Toggle theme">
+          <i class="fas fa-moon"></i>
+        </button>
+      </div>
     </div>
+  </nav>
 
-    <!-- Modal Overlay -->
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal-container">
-            <button class="modal-close" id="modalClose">
-                <i class="fas fa-times"></i>
-            </button>
-            <div class="modal-content" id="modalContent">
-                <!-- Modal content will be dynamically inserted -->
-            </div>
+  <!-- Hero -->
+  <section class="hero" id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <p class="hero-eyebrow">Your personal cinema guide</p>
+      <h1 class="hero-title">What are you<br><em>watching tonight?</em></h1>
+      <div class="search-wrap">
+        <div class="search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="searchInput" placeholder="Search by title, genre, or keyword…" autocomplete="off" />
+          <button id="searchBtn">Search</button>
         </div>
+      </div>
+      <div class="genre-chips">
+        <button class="chip" data-q="Action">Action</button>
+        <button class="chip" data-q="Drama">Drama</button>
+        <button class="chip" data-q="Animation">Animation</button>
+        <button class="chip" data-q="Sci-Fi">Sci-Fi</button>
+        <button class="chip" data-q="Comedy">Comedy</button>
+        <button class="chip" data-q="Thriller">Thriller</button>
+      </div>
     </div>
+  </section>
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-content">
-            <p>&copy; 2024 CineSearch | BCS22 - Group Project</p>
-            <p>Made with <i class="fas fa-heart"></i> for movie lovers</p>
+  <!-- Results Section -->
+  <main class="results-section" id="resultsSection" style="display:none;">
+    <div class="results-bar">
+      <h2 id="resultsTitle">All Movies</h2>
+      <div class="sort-wrap">
+        <label for="sortSelect">Sort</label>
+        <select id="sortSelect">
+          <option value="default">Relevance</option>
+          <option value="latest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+          <option value="highest-rated">Highest Rated</option>
+          <option value="lowest-rated">Lowest Rated</option>
+        </select>
+      </div>
+    </div>
+    <div class="results-grid" id="resultsGrid"></div>
+  </main>
+
+  <!-- Filter Panel -->
+  <aside class="filter-panel" id="filterPanel">
+    <div class="fp-header">
+      <span>Filters</span>
+      <button id="closeFilterBtn"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="fp-body">
+      <div class="fp-section">
+        <h4>Genres</h4>
+        <div class="genre-checkboxes" id="genreFilters"></div>
+      </div>
+      <div class="fp-section">
+        <h4>Year Range</h4>
+        <div class="year-row">
+          <input type="number" id="minYear" placeholder="From" min="1900" max="2025" />
+          <span>—</span>
+          <input type="number" id="maxYear" placeholder="To"   min="1900" max="2025" />
         </div>
-    </footer>
+      </div>
+      <div class="fp-section">
+        <h4>Min IMDb Rating <span id="ratingValue">0</span></h4>
+        <input type="range" id="minRating" min="0" max="10" step="0.5" value="0" />
+      </div>
+      <button class="btn-apply" id="applyFiltersBtn">Apply Filters</button>
+      <button class="btn-reset" id="resetFiltersBtn">Reset All</button>
+    </div>
+  </aside>
+  <div class="fp-overlay" id="fpOverlay"></div>
 
-    <script src="../js/data.js"></script>
-    <script src="../js/main.js"></script>
+  <!-- Movie Modal -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal-box" id="modalBox">
+      <button class="modal-close-btn" id="modalClose"><i class="fas fa-times"></i></button>
+      <div class="modal-body" id="modalContent"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2025 CineSearch &mdash; BCS22 Group Project</p>
+    <p>Made with <i class="fas fa-heart"></i> for movie lovers</p>
+  </footer>
+
+  <script src="../js/data.js"></script>
+  <script src="../js/main.js"></script>
 </body>
 </html>

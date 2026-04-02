@@ -1,379 +1,335 @@
-// DOM Elements
-let currentMovies = [...moviesData];
-let currentFilters = {
-    genres: [],
-    minYear: null,
-    maxYear: null,
-    minRating: 0,
-    searchTerm: ''
-};
-let favorites = JSON.parse(localStorage.getItem('cineSearchFavorites') || '[]');
-let currentSort = 'default';
-let currentView = 'home'; // 'home' or 'favorites'
+/* =============================================
+   CineSearch — main.js
+   ============================================= */
 
-// Initialize the application
-document.addEventListener('DOMContentLoaded', () => {
-    initializeEventListeners();
-    loadFavorites();
-    populateGenreFilters();
-    updateFavoritesCount();
-    renderHomePage();
+let currentMovies  = [];
+let currentFilters = { genres: [], minYear: null, maxYear: null, minRating: 0, searchTerm: "" };
+let favorites      = JSON.parse(localStorage.getItem("cs_favorites") || "[]");
+let currentSort    = "default";
+let currentView    = "home"; // "home" | "search" | "favorites"
+
+/* ─── Init ─── */
+document.addEventListener("DOMContentLoaded", () => {
+  loadFavorites();
+  bindEvents();
+  populateGenreFilters();
+  updateFavBadge();
+  showHome();
 });
 
-// Initialize all event listeners
-function initializeEventListeners() {
-    // Search
-    document.getElementById('searchBtn').addEventListener('click', performSearch);
-    document.getElementById('searchInput').addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') performSearch();
+/* ─── Event Binding ─── */
+function bindEvents() {
+  // Search
+  $("searchBtn").addEventListener("click", doSearch);
+  $("searchInput").addEventListener("keydown", e => { if (e.key === "Enter") doSearch(); });
+
+  // Nav
+  $("homeBtn").addEventListener("click", () => {
+    currentView = "home";
+    $("hero").style.display = "flex";
+    $("resultsSection").style.display = "none";
+    resetFiltersState();
+  });
+  $("homeLogoBtn").addEventListener("click", e => {
+    e.preventDefault();
+    currentView = "home";
+    $("hero").style.display = "flex";
+    $("resultsSection").style.display = "none";
+    resetFiltersState();
+  });
+  $("favoritesBtn").addEventListener("click", showFavorites);
+
+  // Filter panel
+  $("filterBtn").addEventListener("click", openFilterPanel);
+  $("closeFilterBtn").addEventListener("click", closeFilterPanel);
+  $("fpOverlay").addEventListener("click", closeFilterPanel);
+  $("applyFiltersBtn").addEventListener("click", applyFilters);
+  $("resetFiltersBtn").addEventListener("click", resetFilters);
+
+  // Sort
+  $("sortSelect").addEventListener("change", e => {
+    currentSort = e.target.value;
+    if (currentView !== "home") renderResults();
+  });
+
+  // Rating slider
+  $("minRating").addEventListener("input", e => {
+    $("ratingValue").textContent = e.target.value;
+  });
+
+  // Modal close
+  $("modalClose").addEventListener("click", closeModal);
+  $("modalBackdrop").addEventListener("click", e => {
+    if (e.target === $("modalBackdrop")) closeModal();
+  });
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") closeModal();
+  });
+
+  // Theme
+  $("themeToggle").addEventListener("click", toggleTheme);
+
+  // Genre quick-chips in hero
+  document.querySelectorAll(".chip").forEach(chip => {
+    chip.addEventListener("click", () => {
+      $("searchInput").value = chip.dataset.q;
+      doSearch();
     });
-    
-    // Navigation
-    document.getElementById('homeBtn').addEventListener('click', () => {
-        currentView = 'home';
-        resetFilters();
-        renderHomePage();
-        document.getElementById('hero').style.display = 'flex';
-        document.getElementById('resultsSection').style.display = 'none';
-    });
-    
-    document.getElementById('favoritesBtn').addEventListener('click', showFavorites);
-    
-    // Filter panel
-    document.getElementById('filterBtn').addEventListener('click', () => {
-        document.getElementById('filterPanel').classList.add('active');
-    });
-    document.getElementById('closeFilterBtn').addEventListener('click', () => {
-        document.getElementById('filterPanel').classList.remove('active');
-    });
-    document.getElementById('applyFiltersBtn').addEventListener('click', applyFilters);
-    document.getElementById('resetFiltersBtn').addEventListener('click', resetFilters);
-    
-    // Sorting
-    document.getElementById('sortSelect').addEventListener('change', (e) => {
-        currentSort = e.target.value;
-        if (document.getElementById('resultsSection').style.display === 'block') {
-            renderResults();
-        }
-    });
-    
-    // Rating slider
-    const ratingSlider = document.getElementById('minRating');
-    const ratingValue = document.getElementById('ratingValue');
-    ratingSlider.addEventListener('input', (e) => {
-        ratingValue.textContent = e.target.value;
-    });
-    
-    // Modal close
-    document.getElementById('modalClose').addEventListener('click', closeModal);
-    document.getElementById('modalOverlay').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('modalOverlay')) closeModal();
-    });
-    
-    // Theme toggle
-    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-    
-    // Trending tags
-    document.querySelectorAll('.tag').forEach(tag => {
-        tag.addEventListener('click', () => {
-            document.getElementById('searchInput').value = tag.textContent;
-            performSearch();
-        });
-    });
+  });
 }
 
-// Perform search
-function performSearch() {
-    const searchTerm = document.getElementById('searchInput').value.trim();
-    currentFilters.searchTerm = searchTerm;
-    currentView = 'search';
-    
-    // Hide hero, show results
-    document.getElementById('hero').style.display = 'none';
-    document.getElementById('resultsSection').style.display = 'block';
-    
-    // Apply filters and render
-    const filtered = filterMovies(moviesData, currentFilters);
-    const sorted = sortMovies(filtered, currentSort);
-    currentMovies = sorted;
-    
-    document.getElementById('resultsTitle').textContent = 
-        searchTerm ? `Search Results for "${searchTerm}"` : 'All Movies';
-    
-    renderResults();
+/* ─── Core Views ─── */
+function showHome() {
+  $("hero").style.display = "flex";
+  $("resultsSection").style.display = "none";
 }
 
-// Render home page (show all movies)
-function renderHomePage() {
-    currentFilters.searchTerm = '';
-    document.getElementById('searchInput').value = '';
-    const filtered = filterMovies(moviesData, currentFilters);
-    const sorted = sortMovies(filtered, currentSort);
-    currentMovies = sorted;
-    renderResults();
+function doSearch() {
+  const term = $("searchInput").value.trim();
+  currentFilters.searchTerm = term;
+  currentView = "search";
+
+  const filtered = filterMovies(moviesData, currentFilters);
+  currentMovies   = sortMovies(filtered, currentSort);
+
+  $("hero").style.display = "none";
+  $("resultsSection").style.display = "block";
+  $("resultsTitle").textContent = term ? `Results for "${term}"` : "All Movies";
+  renderResults();
 }
 
-// Show favorites only
 function showFavorites() {
-    currentView = 'favorites';
-    const favoriteMovies = moviesData.filter(movie => favorites.includes(movie.id));
-    currentMovies = sortMovies(favoriteMovies, currentSort);
-    document.getElementById('hero').style.display = 'none';
-    document.getElementById('resultsSection').style.display = 'block';
-    document.getElementById('resultsTitle').textContent = 'Your Favorites';
-    renderResults();
+  currentView = "favorites";
+  const faved = moviesData.filter(m => favorites.includes(m.id));
+  currentMovies = sortMovies(faved, currentSort);
+  $("hero").style.display = "none";
+  $("resultsSection").style.display = "block";
+  $("resultsTitle").textContent = `Saved Movies (${faved.length})`;
+  renderResults();
 }
 
-// Render results grid
+/* ─── Render ─── */
 function renderResults() {
-    const grid = document.getElementById('resultsGrid');
-    
-    if (currentMovies.length === 0) {
-        grid.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-film"></i>
-                <p>No movies found. Try adjusting your filters!</p>
-            </div>
-        `;
-        return;
-    }
-    
-    grid.innerHTML = currentMovies.map(movie => createMovieCard(movie)).join('');
-    
-    // Add event listeners to newly created cards
-    document.querySelectorAll('.movie-card').forEach(card => {
-        card.addEventListener('click', (e) => {
-            if (!e.target.closest('.favorite-btn')) {
-                const movieId = parseInt(card.dataset.id);
-                openModal(movieId);
-            }
-        });
+  const grid = $("resultsGrid");
+
+  if (!currentMovies.length) {
+    grid.innerHTML = `
+      <div class="empty-state">
+        <i class="fas fa-film"></i>
+        <p>No movies found. Try adjusting your search or filters.</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = currentMovies.map(m => buildCard(m)).join("");
+
+  // Card click → modal
+  grid.querySelectorAll(".movie-card").forEach(card => {
+    card.addEventListener("click", e => {
+      if (!e.target.closest(".save-btn")) openModal(+card.dataset.id);
     });
-    
-    document.querySelectorAll('.favorite-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const movieId = parseInt(btn.dataset.id);
-            toggleFavorite(movieId);
-            btn.classList.toggle('active', favorites.includes(movieId));
-            
-            // Re-render if in favorites view
-            if (currentView === 'favorites') {
-                showFavorites();
-            }
-        });
+  });
+
+  // Save buttons
+  grid.querySelectorAll(".save-btn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const id = +btn.dataset.id;
+      toggleFavorite(id);
+      btn.classList.toggle("active", favorites.includes(id));
+      btn.querySelector("i").className = favorites.includes(id) ? "fas fa-bookmark" : "far fa-bookmark";
+      if (currentView === "favorites") showFavorites();
     });
+  });
 }
 
-// Create movie card HTML
-function createMovieCard(movie) {
-    const isFavorite = favorites.includes(movie.id);
-    const vibeColor = movie.vibeMatch >= 90 ? '#6cbfa5' : movie.vibeMatch >= 80 ? '#9b59b6' : '#f39c12';
-    
-    return `
-        <div class="movie-card" data-id="${movie.id}">
-            <div class="card-poster">
-                <img src="${movie.poster}" alt="${movie.title}">
-                <div class="vibe-badge" style="background: ${vibeColor}">
-                    ${movie.vibeMatch}% Match
-                </div>
-                <button class="favorite-btn ${isFavorite ? 'active' : ''}" data-id="${movie.id}">
-                    <i class="fas fa-heart"></i>
-                </button>
-            </div>
-            <div class="card-content">
-                <h3 class="card-title">${movie.title}</h3>
-                <div class="card-meta">
-                    <span>${movie.year}</span>
-                    <span class="imdb-rating">
-                        <i class="fas fa-star"></i> ${movie.imdbRating}/10
-                    </span>
-                </div>
-                <div class="genre-tags">
-                    ${movie.genres.map(genre => `<span class="genre-tag">${genre}</span>`).join('')}
-                </div>
-            </div>
+function buildCard(movie) {
+  const saved     = favorites.includes(movie.id);
+  const posterUrl = getPosterUrl(movie);
+  const posterEl  = posterUrl
+    ? `<img src="${posterUrl}" alt="${movie.title}" loading="lazy" onerror="this.parentElement.innerHTML=fallbackPoster('${movie.title}')">`
+    : fallbackPoster(movie.title);
+
+  return `
+    <div class="movie-card" data-id="${movie.id}">
+      <div class="card-poster">
+        ${posterEl}
+        <div class="card-overlay">
+          <p class="card-overlay-text">${movie.plot}</p>
         </div>
-    `;
+        <button class="save-btn ${saved ? "active" : ""}" data-id="${movie.id}" title="${saved ? "Remove from saved" : "Save movie"}">
+          <i class="${saved ? "fas" : "far"} fa-bookmark"></i>
+        </button>
+      </div>
+      <div class="card-info">
+        <p class="card-title" title="${movie.title}">${movie.title}</p>
+        <div class="card-meta">
+          <span>${movie.year}</span>
+          <span class="card-rating"><i class="fas fa-star"></i>${movie.imdbRating}</span>
+        </div>
+        <div class="card-genres">
+          ${movie.genres.slice(0,2).map(g => `<span class="genre-pill">${g}</span>`).join("")}
+        </div>
+      </div>
+    </div>`;
 }
 
-// Open modal with movie details
-function openModal(movieId) {
-    const movie = moviesData.find(m => m.id === movieId);
-    if (!movie) return;
-    
-    const isFavorite = favorites.includes(movie.id);
-    const vibeColor = movie.vibeMatch >= 90 ? '#6cbfa5' : movie.vibeMatch >= 80 ? '#9b59b6' : '#f39c12';
-    
-    const modalContent = `
-        <div class="modal-poster">
-            <img src="${movie.poster}" alt="${movie.title}">
-            <button class="play-button" id="playTrailerBtn">
-                <i class="fas fa-play"></i>
-            </button>
-            <div class="trailer-placeholder" id="trailerPlaceholder">
-                <iframe width="100%" height="100%" src="https://www.youtube.com/embed/dQw4w9WgXcQ" frameborder="0" allowfullscreen></iframe>
-            </div>
-        </div>
-        <div class="modal-info">
-            <h2>${movie.title}</h2>
-            <div class="modal-meta">
-                <span class="modal-year">${movie.year}</span>
-                <span class="modal-rating"><i class="fas fa-star"></i> ${movie.imdbRating}/10</span>
-                <span class="modal-vibe" style="background: ${vibeColor}">${movie.vibeMatch}% Vibe Match</span>
-            </div>
-            <p class="modal-plot">${movie.plot}</p>
-            <div class="cast-section">
-                <h4>Cast</h4>
-                <div class="cast-chips">
-                    ${movie.cast.map(actor => `<span class="cast-chip">${actor}</span>`).join('')}
-                </div>
-            </div>
-            <div class="platforms-section">
-                <h4>Available on</h4>
-                <div class="platform-chips">
-                    ${movie.platforms.map(platform => `<span class="platform-chip">${platform}</span>`).join('')}
-                </div>
-            </div>
-            <button class="modal-favorite" id="modalFavoriteBtn">
-                <i class="fas ${isFavorite ? 'fa-heart' : 'fa-heart-o'}"></i>
-                ${isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}
-            </button>
-        </div>
-    `;
-    
-    document.getElementById('modalContent').innerHTML = modalContent;
-    document.getElementById('modalOverlay').classList.add('active');
-    
-    // Modal event listeners
-    document.getElementById('playTrailerBtn').addEventListener('click', () => {
-        const trailer = document.getElementById('trailerPlaceholder');
-        trailer.classList.toggle('active');
-    });
-    
-    document.getElementById('modalFavoriteBtn').addEventListener('click', () => {
-        toggleFavorite(movie.id);
-        openModal(movie.id); // Refresh modal
-        if (currentView === 'favorites') {
-            showFavorites();
-        } else {
-            renderResults();
-        }
-        updateFavoritesCount();
-    });
+function fallbackPoster(title) {
+  const initial = title.charAt(0).toUpperCase();
+  return `<div class="card-poster-fallback">
+    <i class="fas fa-film"></i>
+    <span>${initial}</span>
+  </div>`;
 }
 
-// Close modal
+/* ─── Modal ─── */
+function openModal(id) {
+  const movie = moviesData.find(m => m.id === id);
+  if (!movie) return;
+
+  const saved     = favorites.includes(id);
+  const posterUrl = getPosterUrl(movie);
+  const posterEl  = posterUrl
+    ? `<img src="${posterUrl}" alt="${movie.title}" onerror="this.outerHTML='<div class=\\"modal-poster-fallback\\"><i class=\\"fas fa-film\\"></i><span>${movie.title}</span></div>'">`
+    : `<div class="modal-poster-fallback"><i class="fas fa-film"></i><span>${movie.title}</span></div>`;
+
+  $("modalContent").innerHTML = `
+    <div class="modal-poster-col">${posterEl}</div>
+    <div class="modal-info-col">
+      <h2 class="modal-title">${movie.title}</h2>
+      <div class="modal-tags">
+        <span class="modal-tag tag-year">${movie.year}</span>
+        <span class="modal-tag tag-rating"><i class="fas fa-star"></i> ${movie.imdbRating} / 10</span>
+        ${movie.genres.map(g => `<span class="modal-tag tag-genre">${g}</span>`).join("")}
+      </div>
+      <p class="modal-plot">${movie.plot}</p>
+      <div>
+        <p class="modal-section-title">Cast</p>
+        <div class="chips-row">
+          ${movie.cast.map(a => `<span class="chip-sm">${a}</span>`).join("")}
+        </div>
+      </div>
+      <div>
+        <p class="modal-section-title">Available on</p>
+        <div class="chips-row">
+          ${movie.platforms.map(p => `<span class="chip-sm chip-platform">${p}</span>`).join("")}
+        </div>
+      </div>
+      <button class="modal-save-btn ${saved ? "active" : ""}" id="modalSaveBtn" data-id="${id}">
+        <i class="${saved ? "fas" : "far"} fa-bookmark"></i>
+        ${saved ? "Remove from Saved" : "Save Movie"}
+      </button>
+    </div>`;
+
+  $("modalBackdrop").classList.add("active");
+  document.body.style.overflow = "hidden";
+
+  $("modalSaveBtn").addEventListener("click", () => {
+    toggleFavorite(id);
+    openModal(id); // refresh
+    if (currentView === "favorites") showFavorites();
+    else if (currentView === "search") renderResults();
+  });
+}
+
 function closeModal() {
-    document.getElementById('modalOverlay').classList.remove('active');
+  $("modalBackdrop").classList.remove("active");
+  document.body.style.overflow = "";
 }
 
-// Toggle favorite
-function toggleFavorite(movieId) {
-    const index = favorites.indexOf(movieId);
-    if (index === -1) {
-        favorites.push(movieId);
-    } else {
-        favorites.splice(index, 1);
-    }
-    localStorage.setItem('cineSearchFavorites', JSON.stringify(favorites));
-    updateFavoritesCount();
+/* ─── Favorites ─── */
+function toggleFavorite(id) {
+  const idx = favorites.indexOf(id);
+  if (idx === -1) {
+    favorites.push(id);
+    showToast("Saved to your list");
+  } else {
+    favorites.splice(idx, 1);
+    showToast("Removed from your list");
+  }
+  localStorage.setItem("cs_favorites", JSON.stringify(favorites));
+  updateFavBadge();
 }
 
-// Update favorites count in navbar
-function updateFavoritesCount() {
-    const count = favorites.length;
-    document.getElementById('favoritesCount').textContent = count;
-}
-
-// Load favorites from localStorage
 function loadFavorites() {
-    const stored = localStorage.getItem('cineSearchFavorites');
-    if (stored) {
-        favorites = JSON.parse(stored);
-    }
+  favorites = JSON.parse(localStorage.getItem("cs_favorites") || "[]");
 }
 
-// Populate genre filters
+function updateFavBadge() {
+  $("favoritesCount").textContent = favorites.length;
+}
+
+/* ─── Filter Panel ─── */
+function openFilterPanel() {
+  $("filterPanel").classList.add("active");
+  $("fpOverlay").classList.add("active");
+  document.body.style.overflow = "hidden";
+}
+
+function closeFilterPanel() {
+  $("filterPanel").classList.remove("active");
+  $("fpOverlay").classList.remove("active");
+  document.body.style.overflow = "";
+}
+
 function populateGenreFilters() {
-    const genres = getAllGenres();
-    const container = document.getElementById('genreFilters');
-    container.innerHTML = genres.map(genre => `
-        <label class="genre-checkbox">
-            <input type="checkbox" value="${genre}">
-            <span>${genre}</span>
-        </label>
-    `).join('');
+  const container = $("genreFilters");
+  container.innerHTML = getAllGenres().map(g => `
+    <label class="g-label">
+      <input type="checkbox" value="${g}">
+      <span>${g}</span>
+    </label>`).join("");
 }
 
-// Apply filters
 function applyFilters() {
-    // Get selected genres
-    const selectedGenres = [];
-    document.querySelectorAll('#genreFilters input:checked').forEach(cb => {
-        selectedGenres.push(cb.value);
-    });
-    
-    const minYear = document.getElementById('minYear').value;
-    const maxYear = document.getElementById('maxYear').value;
-    const minRating = parseFloat(document.getElementById('minRating').value);
-    
-    currentFilters = {
-        genres: selectedGenres,
-        minYear: minYear ? parseInt(minYear) : null,
-        maxYear: maxYear ? parseInt(maxYear) : null,
-        minRating: minRating,
-        searchTerm: currentFilters.searchTerm || ''
-    };
-    
-    // Close filter panel
-    document.getElementById('filterPanel').classList.remove('active');
-    
-    // Re-render results
-    if (document.getElementById('resultsSection').style.display === 'block') {
-        performSearch();
-    } else {
-        renderHomePage();
-    }
+  const selected = [...document.querySelectorAll("#genreFilters input:checked")].map(c => c.value);
+  const minYear  = $("minYear").value  ? +$("minYear").value  : null;
+  const maxYear  = $("maxYear").value  ? +$("maxYear").value  : null;
+  const minRating= +$("minRating").value;
+
+  currentFilters = { genres: selected, minYear, maxYear, minRating, searchTerm: currentFilters.searchTerm };
+  closeFilterPanel();
+  doSearch();
 }
 
-// Reset all filters
 function resetFilters() {
-    // Reset checkboxes
-    document.querySelectorAll('#genreFilters input').forEach(cb => cb.checked = false);
-    document.getElementById('minYear').value = '';
-    document.getElementById('maxYear').value = '';
-    document.getElementById('minRating').value = 0;
-    document.getElementById('ratingValue').textContent = 0;
-    document.getElementById('searchInput').value = '';
-    
-    currentFilters = {
-        genres: [],
-        minYear: null,
-        maxYear: null,
-        minRating: 0,
-        searchTerm: ''
-    };
-    currentSort = 'default';
-    document.getElementById('sortSelect').value = 'default';
-    
-    if (currentView === 'favorites') {
-        showFavorites();
-    } else {
-        renderHomePage();
-    }
-    
-    document.getElementById('filterPanel').classList.remove('active');
+  document.querySelectorAll("#genreFilters input").forEach(c => c.checked = false);
+  $("minYear").value    = "";
+  $("maxYear").value    = "";
+  $("minRating").value  = 0;
+  $("ratingValue").textContent = 0;
+  resetFiltersState();
+  closeFilterPanel();
 }
 
-// Toggle dark/light theme
-function toggleTheme() {
-    const isDark = document.body.getAttribute('data-theme') === 'dark';
-    if (isDark) {
-        document.body.removeAttribute('data-theme');
-        document.getElementById('themeToggle').innerHTML = '<i class="fas fa-moon"></i>';
-    } else {
-        document.body.setAttribute('data-theme', 'dark');
-        document.getElementById('themeToggle').innerHTML = '<i class="fas fa-sun"></i>';
-    }
+function resetFiltersState() {
+  currentFilters = { genres: [], minYear: null, maxYear: null, minRating: 0, searchTerm: "" };
+  $("searchInput").value   = "";
+  $("sortSelect").value    = "default";
+  currentSort = "default";
 }
+
+/* ─── Theme ─── */
+function toggleTheme() {
+  const isLight = document.body.getAttribute("data-theme") === "light";
+  if (isLight) {
+    document.body.removeAttribute("data-theme");
+    $("themeToggle").innerHTML = '<i class="fas fa-moon"></i>';
+  } else {
+    document.body.setAttribute("data-theme", "light");
+    $("themeToggle").innerHTML = '<i class="fas fa-sun"></i>';
+  }
+}
+
+/* ─── Toast ─── */
+let toastTimer;
+function showToast(msg) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+/* ─── Util ─── */
+function $(id) { return document.getElementById(id); }
