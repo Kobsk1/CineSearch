@@ -77,14 +77,27 @@ function bindEvents() {
   // Theme
   $("themeToggle").addEventListener("click", toggleTheme);
 
-  // Genre quick-chips in hero
-  document.querySelectorAll(".chip").forEach(chip => {
-    chip.addEventListener("click", () => {
-      $("searchInput").value = chip.dataset.q;
-      doSearch();
+// Genre quick-chips in hero
+document.querySelectorAll(".chip").forEach(chip => {
+  chip.addEventListener("click", () => {
+    const genre = chip.dataset.q;
+    currentFilters = { genres: [genre], minYear: null, maxYear: null, minRating: 0, searchTerm: "" };
+    $("searchInput").value = "";
+    currentView = "search";
+
+    $("hero").style.display = "none";
+    $("resultsSection").style.display = "block";
+    $("resultsTitle").textContent = `Genre: ${genre}`;
+    $("resultsGrid").innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading movies...</p></div>';
+
+fetchMovies(currentFilters, currentSort).then(movies => {
+      currentMovies = movies;
+      $("resultsTitle").textContent = `Genre: ${genre} (${movies.length} results)`;
+      renderResults();
     });
   });
-}
+});
+} // ← closes bindEvents()
 
 /* ─── Core Views ─── */
 function showHome() {
