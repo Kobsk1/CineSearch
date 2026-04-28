@@ -455,6 +455,28 @@
 .modal-save-btn:hover { background: var(--surface); border-color: var(--accent); }
 .modal-save-btn.active { background: rgba(192,57,43,.15); border-color: var(--accent2); color: var(--accent2); }
 
+.modal-trailer {
+  margin-top: 0.5rem;
+}
+
+.trailer-wrapper {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+}
+
+.trailer-wrapper iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 10px;
+}
+
 /* Responsive modal */
 @media (max-width: 680px) {
   .modal-body { grid-template-columns: 1fr; }

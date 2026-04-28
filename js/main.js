@@ -224,12 +224,14 @@ async function openModal(id) {
     ? `<img src="${posterUrl}" alt="${movie.title.replace(/"/g, '&quot;')}" onerror="this.outerHTML='<div class=\\'modal-poster-fallback\\'><i class=\\'fas fa-film\\'></i><span>' + this.alt + '</span></div>'">`
     : `<div class="modal-poster-fallback"><i class="fas fa-film"></i><span>${movie.title}</span></div>`;
 
-  let trailerHTML = '';
+let trailerHTML = '';
   if (movie.trailerUrl) {
     trailerHTML = `
-      <div class="modal-trailer" style="margin-top: 1.5rem;">
+      <div class="modal-trailer">
         <p class="modal-section-title">Trailer</p>
-        <iframe width="100%" height="215" src="${movie.trailerUrl}" title="YouTube trailer" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius: 8px;"></iframe>
+        <div class="trailer-wrapper">
+          <iframe src="${movie.trailerUrl}" title="YouTube trailer" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
       </div>
     `;
   }
