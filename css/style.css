@@ -397,9 +397,10 @@ body {
   border-radius: 50px;
   font-size: .88rem;
   z-index: 9999;
-  transition: transform .3s ease;
+  transition: transform .3s ease, opacity .3s ease;
   white-space: nowrap;
   box-shadow: var(--shadow);
+  opacity: 0;
 }
 
 .toast.show { transform: translateX(-50%) translateY(0); }
@@ -416,4 +417,39 @@ body {
 
 @media (max-width: 480px) {
   .results-grid { grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+}
+
+/* =============================================
+   RECOMMENDATIONS
+   ============================================= */
+.recommendations-section {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2.5rem 2rem 1rem;
+}
+
+.recs-header {
+  margin-bottom: 1.5rem;
+}
+
+.recs-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  letter-spacing: .04em;
+}
+
+.recs-title i {
+  color: var(--accent);
+  margin-right: .4rem;
+  font-size: 1.6rem;
+}
+
+.recs-subtitle {
+  color: var(--text-muted);
+  font-size: .9rem;
+  margin-top: .3rem;
+}
+
+@media (max-width: 768px) {
+  .recommendations-section { padding: 2rem 1.25rem 1rem; }
 }
