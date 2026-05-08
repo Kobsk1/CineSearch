@@ -185,3 +185,60 @@ function sortMovies(movies, sortBy) {
     default:              return s;
   }
 }
+
+async function fetchRecommendations(favorites, limit = 12) {
+  if (!favorites.length) return [];
+
+  // Count genre frequency across saved movies
+  const genreCounts = {};
+  favorites.forEach(movie => {
+    movie.genres.forEach(g => {
+      genreCounts[g] = (genreCounts[g] || 0) + 1;
+    });
+  });
+
+  // Pick top 3 most-saved genres
+  const topGenres = Object.entries(genreCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([name]) => name);
+
+  // Convert genre names to TMDB IDs
+  const genreIds = topGenres
+    .map(name => Object.keys(genresMap).find(k => genresMap[k] === name))
+    .filter(Boolean);
+
+  // Use average saved rating minus 1.5 as a floor
+  const avgRating = favorites.reduce((sum, m) => sum + m.imdbRating, 0) / favorites.length;
+  const minRating = Math.max(0, (avgRating - 1.5).toFixed(1));
+
+  // Don't recommend movies the user already saved
+  const savedIds = new Set(favorites.map(m => m.id));
+
+  const params = new URLSearchParams({
+    language: 'en-US',
+    page: '1',
+    include_adult: 'false',
+    with_genres: genreIds.join(','),
+    'vote_average.gte': minRating,
+    sort_by: 'vote_average.desc',
+    'vote_count.gte': '200'
+  });
+
+  try {
+    const res = await fetch(`${TMDB_BASE_URL}/discover/movie?${params}`, {
+      headers: {
+        accept: 'application/json',
+        Authorization: `Bearer ${TMDB_READ_ACCESS_TOKEN}`
+      }
+    });
+    const data = await res.json();
+    return (data.results || [])
+      .map(m => mapMovieData(m))
+      .filter(m => !savedIds.has(m.id))
+      .slice(0, limit);
+  } catch (err) {
+    console.error("Error fetching recommendations", err);
+    return [];
+  }
+}

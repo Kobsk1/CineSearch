@@ -55,11 +55,20 @@
         <button class="chip" data-q="Action">Action</button>
         <button class="chip" data-q="Drama">Drama</button>
         <button class="chip" data-q="Animation">Animation</button>
-        <button class="chip" data-q="Sci-Fi">Sci-Fi</button>
+        <button class="chip" data-q="Science Fiction">Science Fiction</button>
         <button class="chip" data-q="Comedy">Comedy</button>
         <button class="chip" data-q="Thriller">Thriller</button>
       </div>
     </div>
+  </section>
+
+  <!-- Recommendations Section -->
+  <section class="recommendations-section" id="recommendationsSection" style="display:none;">
+    <div class="recs-header">
+      <h2 class="recs-title"><i class="fas fa-magic"></i> Recommended For You</h2>
+      <p class="recs-subtitle" id="recsSubtitle"></p>
+    </div>
+    <div class="results-grid" id="recsGrid"></div>
   </section>
 
   <!-- Results Section -->
@@ -94,9 +103,9 @@
       <div class="fp-section">
         <h4>Year Range</h4>
         <div class="year-row">
-          <input type="number" id="minYear" placeholder="From" min="1900" max="2025" />
+          <input type="number" id="minYear" placeholder="From" min="1900" max="2026" />
           <span>—</span>
-          <input type="number" id="maxYear" placeholder="To"   min="1900" max="2025" />
+          <input type="number" id="maxYear" placeholder="To"   min="1900" max="2026" />
         </div>
       </div>
       <div class="fp-section">
@@ -122,7 +131,7 @@
 
   <!-- Footer -->
   <footer class="footer">
-    <p>&copy; 2025 CineSearch &mdash; GroupName</p>
+    <p>&copy; 2026 CineSearch &mdash; GroupName</p>
     <p>Made with <i class="fas fa-heart"></i> for movie lovers</p>
   </footer>
 

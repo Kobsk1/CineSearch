@@ -34,17 +34,16 @@ function bindEvents() {
   // Nav
   $("homeBtn").addEventListener("click", () => {
     currentView = "home";
-    $("hero").style.display = "flex";
-    $("resultsSection").style.display = "none";
     resetFiltersState();
+    showHome();
   });
   $("homeLogoBtn").addEventListener("click", e => {
     e.preventDefault();
     currentView = "home";
-    $("hero").style.display = "flex";
-    $("resultsSection").style.display = "none";
     resetFiltersState();
+    showHome();
   });
+
   $("favoritesBtn").addEventListener("click", showFavorites);
 
   // Filter panel
@@ -103,9 +102,64 @@ fetchMovies(currentFilters, currentSort).then(movies => {
 } // ← closes bindEvents()
 
 /* ─── Core Views ─── */
-function showHome() {
+async function showHome() {
   $("hero").style.display = "flex";
   $("resultsSection").style.display = "none";
+
+  if (favorites.length > 0) {
+    await showRecommendations();
+  } else {
+    $("recommendationsSection").style.display = "none";
+  }
+}
+
+async function showRecommendations() {
+  const section = $("recommendationsSection");
+  section.style.display = "block";
+  $("recsGrid").innerHTML = `
+    <div class="empty-state">
+      <i class="fas fa-spinner fa-spin"></i>
+      <p>Finding picks for you…</p>
+    </div>`;
+
+  const recs = await fetchRecommendations(favorites);
+
+  if (!recs.length) {
+    section.style.display = "none";
+    return;
+  }
+
+  // Find the top genre for the subtitle
+  const genreCounts = {};
+  favorites.forEach(m => m.genres.forEach(g => {
+    genreCounts[g] = (genreCounts[g] || 0) + 1;
+  }));
+  const topGenre = Object.entries(genreCounts)
+    .sort((a, b) => b[1] - a[1])[0]?.[0] || "";
+
+  $("recsSubtitle").textContent = `Based on your saved ${topGenre} films`;
+  $("recsGrid").innerHTML = recs.map(m => buildCard(m)).join("");
+
+  // Wire up card clicks
+  $("recsGrid").querySelectorAll(".movie-card").forEach(card => {
+    card.addEventListener("click", e => {
+      if (!e.target.closest(".save-btn")) openModal(+card.dataset.id);
+    });
+  });
+
+  // Wire up save buttons
+  $("recsGrid").querySelectorAll(".save-btn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const id = +btn.dataset.id;
+      const movie = recs.find(m => m.id === id);
+      if (movie) toggleFavorite(movie);
+      const isSaved = favorites.some(f => f.id === id);
+      btn.classList.toggle("active", isSaved);
+      btn.querySelector("i").className = isSaved ? "fas fa-bookmark" : "far fa-bookmark";
+      updateFavBadge();
+    });
+  });
 }
 
 async function doSearch() {
@@ -161,10 +215,10 @@ function renderResults() {
       const id = +btn.dataset.id;
       const movie = currentMovies.find(m => m.id === id);
       if (movie) toggleFavorite(movie);
-      
       const isSaved = favorites.some(f => f.id === id);
       btn.classList.toggle("active", isSaved);
       btn.querySelector("i").className = isSaved ? "fas fa-bookmark" : "far fa-bookmark";
+      updateFavBadge();
       if (currentView === "favorites") showFavorites();
     });
   });
@@ -293,6 +347,12 @@ function toggleFavorite(movie) {
   }
   localStorage.setItem("cs_favorites", JSON.stringify(favorites));
   updateFavBadge();
+
+  // Refresh recommendations live if on home
+  if (currentView === "home") {
+    if (favorites.length > 0) showRecommendations();
+    else $("recommendationsSection").style.display = "none";
+  }
 }
 
 function loadFavorites() {
@@ -366,13 +426,17 @@ function toggleTheme() {
 }
 
 /* ─── Toast ─── */
-let toastTimer;
+let toastTimer = null;
 function showToast(msg) {
   const t = $("toast");
   t.textContent = msg;
-  t.classList.add("show");
+  t.style.opacity = "1";
+  t.style.transform = "translateX(-50%) translateY(0)";
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+  toastTimer = setTimeout(() => {
+    t.style.opacity = "0";
+    t.style.transform = "translateX(-50%) translateY(120%)";
+  }, 2200);
 }
 
 /* ─── Util ─── */
