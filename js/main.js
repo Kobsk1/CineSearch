@@ -57,7 +57,10 @@ function bindEvents() {
   // Sort
   $("sortSelect").addEventListener("change", e => {
     currentSort = e.target.value;
-    if (currentView !== "home") renderResults();
+    if (currentView !== "home") {
+      currentMovies = sortMovies(currentMovies, currentSort);
+      renderResults();
+    }
   });
 
   // Rating slider
