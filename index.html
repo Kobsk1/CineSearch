@@ -75,15 +75,20 @@
   <main class="results-section" id="resultsSection" style="display:none;">
     <div class="results-bar">
       <h2 id="resultsTitle">All Movies</h2>
-      <div class="sort-wrap">
-        <label for="sortSelect">Sort</label>
-        <select id="sortSelect">
-          <option value="default">Relevance</option>
-          <option value="latest">Newest First</option>
-          <option value="oldest">Oldest First</option>
-          <option value="highest-rated">Highest Rated</option>
-          <option value="lowest-rated">Lowest Rated</option>
-        </select>
+      <div class="results-actions">
+        <button class="btn-clear-all" id="clearAllBtn" style="display:none;" title="Clear all saved movies">
+          <i class="fas fa-trash"></i> Clear All
+        </button>
+        <div class="sort-wrap">
+          <label for="sortSelect">Sort</label>
+          <select id="sortSelect">
+            <option value="default">Relevance</option>
+            <option value="latest">Newest First</option>
+            <option value="oldest">Oldest First</option>
+            <option value="highest-rated">Highest Rated</option>
+            <option value="lowest-rated">Lowest Rated</option>
+          </select>
+        </div>
       </div>
     </div>
     <div class="results-grid" id="resultsGrid"></div>
@@ -129,9 +134,13 @@
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
+  <button id="scrollTopBtn" class="scroll-top-btn" aria-label="Scroll to top">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+
   <!-- Footer -->
   <footer class="footer">
-    <p>&copy; 2026 CineSearch &mdash; GroupName</p>
+    <p>&copy; 2026 CineSearch &mdash; CRT Tech</p>
     <p>Made with <i class="fas fa-heart"></i> for movie lovers</p>
   </footer>
 

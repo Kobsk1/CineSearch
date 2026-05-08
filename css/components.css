@@ -9,6 +9,9 @@
   position: relative;
   border: 1px solid var(--border);
   transition: transform .25s ease, border-color .25s, box-shadow .25s;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .movie-card:hover {
@@ -102,6 +105,10 @@
 /* Card info */
 .card-info {
   padding: .75rem;
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  flex: 1;
 }
 
 .card-title {
@@ -109,9 +116,10 @@
   font-weight: 600;
   color: var(--text);
   margin-bottom: .3rem;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .card-meta {
@@ -340,6 +348,24 @@
   display: grid;
   grid-template-columns: 260px 1fr;
   gap: 0;
+}
+
+.modal-loading-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 340px;
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.modal-loading-state i {
+  font-size: 2rem;
+  color: var(--accent);
+  margin-bottom: 1rem;
 }
 
 .modal-poster-col {

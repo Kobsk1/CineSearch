@@ -62,6 +62,9 @@ function bindEvents() {
     }
   });
 
+  // Clear all favorites
+  $("clearAllBtn").addEventListener("click", clearAllFavorites);
+
   // Rating slider
   $("minRating").addEventListener("input", e => {
     $("ratingValue").textContent = e.target.value;
@@ -79,6 +82,22 @@ function bindEvents() {
   // Theme
   $("themeToggle").addEventListener("click", toggleTheme);
 
+  // Scroll-to-top button
+  const scrollTopBtn = $("scrollTopBtn");
+  if (scrollTopBtn) {
+    scrollTopBtn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    window.addEventListener("scroll", () => {
+      if (window.scrollY > 360) {
+        scrollTopBtn.classList.add("visible");
+      } else {
+        scrollTopBtn.classList.remove("visible");
+      }
+    });
+  }
+
 // Genre quick-chips in hero
 document.querySelectorAll(".chip").forEach(chip => {
   chip.addEventListener("click", () => {
@@ -89,6 +108,7 @@ document.querySelectorAll(".chip").forEach(chip => {
 
     $("hero").style.display = "none";
     $("resultsSection").style.display = "block";
+    $("clearAllBtn").style.display = "none"; 
     $("resultsTitle").textContent = `Genre: ${genre}`;
     $("resultsGrid").innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading movies...</p></div>';
 
@@ -117,7 +137,7 @@ async function showRecommendations() {
   const section = $("recommendationsSection");
   section.style.display = "block";
   $("recsGrid").innerHTML = `
-    <div class="empty-state">
+    <div class="empty-state recommendation-loading">
       <i class="fas fa-spinner fa-spin"></i>
       <p>Finding picks for you…</p>
     </div>`;
@@ -171,6 +191,7 @@ async function doSearch() {
   $("resultsSection").style.display = "block";
   $("resultsTitle").textContent = "Loading...";
   $("resultsGrid").innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading movies...</p></div>';
+  $("clearAllBtn").style.display = "none"; 
 
   currentMovies = await fetchMovies(currentFilters, currentSort);
 
@@ -184,6 +205,7 @@ function showFavorites() {
   $("hero").style.display = "none";
   $("resultsSection").style.display = "block";
   $("resultsTitle").textContent = `Saved Movies (${currentMovies.length})`;
+  $("clearAllBtn").style.display = "flex"; 
   renderResults();
 }
 
@@ -267,7 +289,7 @@ function fallbackPoster(title) {
 async function openModal(id) {
   $("modalBackdrop").classList.add("active");
   document.body.style.overflow = "hidden";
-  $("modalContent").innerHTML = '<div style="width:100%;text-align:center;padding:4rem;"><i class="fas fa-spinner fa-spin" style="font-size:2rem;color:var(--primary);"></i><p style="margin-top:1rem;">Loading details...</p></div>';
+  $("modalContent").innerHTML = '<div class="modal-loading-state"><i class="fas fa-spinner fa-spin"></i><p>Loading details...</p></div>';
 
   const movie = await fetchMovieDetails(id);
   if (!movie) {
@@ -359,6 +381,24 @@ function loadFavorites() {
   favorites = JSON.parse(localStorage.getItem("cs_favorites") || "[]");
 }
 
+function clearAllFavorites() {
+  if (favorites.length === 0) return;
+  
+  if (confirm("Are you sure you want to clear all saved movies? This action cannot be undone.")) {
+    favorites = [];
+    localStorage.setItem("cs_favorites", JSON.stringify(favorites));
+    updateFavBadge();
+    showToast("All saved movies cleared");
+    
+    // Refresh the view
+    if (currentView === "favorites") {
+      showFavorites();
+    } else if (currentView === "home") {
+      showHome();
+    }
+  }
+}
+
 function updateFavBadge() {
   $("favoritesCount").textContent = favorites.length;
 }
@@ -441,3 +481,22 @@ function showToast(msg) {
 
 /* ─── Util ─── */
 function $(id) { return document.getElementById(id); }
+
+function sortMovies(movies, sortBy) {
+  const sorted = [...movies]; // Create a copy to avoid mutating original
+
+  switch (sortBy) {
+    case "latest":
+      return sorted.sort((a, b) => (b.year === "N/A" ? 0 : b.year) - (a.year === "N/A" ? 0 : a.year));
+    case "oldest":
+      return sorted.sort((a, b) => (a.year === "N/A" ? 9999 : a.year) - (b.year === "N/A" ? 9999 : b.year));
+    case "highest-rated":
+      return sorted.sort((a, b) => parseFloat(b.imdbRating) - parseFloat(a.imdbRating));
+    case "lowest-rated":
+      return sorted.sort((a, b) => parseFloat(a.imdbRating) - parseFloat(b.imdbRating));
+    case "default":
+    default:
+      // For "default" (relevance), return as-is or implement custom logic if needed
+      return sorted;
+  }
+}
