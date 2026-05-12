@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   populateGenreFilters();
   
   updateFavBadge();
+  updateNavVisibility();
   showHome();
 });
 
@@ -36,12 +37,14 @@ function bindEvents() {
     currentView = "home";
     resetFiltersState();
     showHome();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   });
   $("homeLogoBtn").addEventListener("click", e => {
     e.preventDefault();
     currentView = "home";
     resetFiltersState();
     showHome();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
   $("favoritesBtn").addEventListener("click", showFavorites);
@@ -105,6 +108,7 @@ document.querySelectorAll(".chip").forEach(chip => {
     currentFilters = { genres: [genre], minYear: null, maxYear: null, minRating: 0, searchTerm: "" };
     $("searchInput").value = "";
     currentView = "search";
+    updateNavVisibility();
 
     $("hero").style.display = "none";
     $("resultsSection").style.display = "block";
@@ -125,6 +129,7 @@ fetchMovies(currentFilters, currentSort).then(movies => {
 async function showHome() {
   $("hero").style.display = "flex";
   $("resultsSection").style.display = "none";
+  updateNavVisibility();
 
   if (favorites.length > 0) {
     await showRecommendations();
@@ -186,6 +191,7 @@ async function doSearch() {
   const term = $("searchInput").value.trim();
   currentFilters.searchTerm = term;
   currentView = "search";
+  updateNavVisibility();
 
   $("hero").style.display = "none";
   $("resultsSection").style.display = "block";
@@ -201,6 +207,7 @@ async function doSearch() {
 
 function showFavorites() {
   currentView = "favorites";
+  updateNavVisibility();
   currentMovies = sortMovies(favorites, currentSort);
   $("hero").style.display = "none";
   $("resultsSection").style.display = "block";
@@ -498,5 +505,16 @@ function sortMovies(movies, sortBy) {
     default:
       // For "default" (relevance), return as-is or implement custom logic if needed
       return sorted;
+  }
+}
+
+function updateNavVisibility() {
+  const navActions = document.querySelector(".nav-actions");
+  if (currentView === "home") {
+    navActions.style.opacity = "0";
+    navActions.style.pointerEvents = "none";
+  } else {
+    navActions.style.opacity = "1";
+    navActions.style.pointerEvents = "all";
   }
 }
