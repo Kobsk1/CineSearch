@@ -33,11 +33,11 @@ function getAllGenres() {
   return Object.values(genresMap).sort();
 }
 
-async function fetchMovies(filters, sortBy) {
+async function fetchMovies(filters, sortBy, page = 1) {
   let endpoint = "";
   const params = new URLSearchParams({
     language: 'en-US',
-    page: '1',
+    page: String(page),
     include_adult: 'false'
   });
 
@@ -129,6 +129,25 @@ async function fetchMovieDetails(id) {
   } catch(err) {
     console.error("Error fetching movie details", err);
     return null;
+  }
+}
+
+async function fetchTrending(timeWindow = 'day') {
+  try {
+    const res = await fetch(`${TMDB_BASE_URL}/trending/movie/${timeWindow}?language=en-US`, {
+      headers: {
+        accept: 'application/json',
+        Authorization: `Bearer ${TMDB_READ_ACCESS_TOKEN}`
+      }
+    });
+    const data = await res.json();
+    return (data.results || []).slice(0, 10).map((m, i) => ({
+      ...mapMovieData(m),
+      rank: i + 1
+    }));
+  } catch (err) {
+    console.error("Error fetching trending", err);
+    return [];
   }
 }
 

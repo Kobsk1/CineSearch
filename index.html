@@ -20,6 +20,12 @@
         <i class="fas fa-film"></i>
         <span>CineSearch</span>
       </a>
+      <div class="nav-search-wrap" id="navSearchWrap">
+        <div class="nav-search-box">
+          <i class="fas fa-search"></i>
+          <input type="text" id="navSearchInput" placeholder="Search movies…" autocomplete="off" />
+        </div>
+      </div>
       <div class="nav-actions">
         <button class="nav-btn" id="homeBtn" title="Home">
           <i class="fas fa-home"></i><span>Home</span>
@@ -54,38 +60,60 @@
     </div>
   </section>
 
-  <!-- Recommendations Section -->
-  <section class="recommendations-section" id="recommendationsSection" style="display:none;">
-    <div class="recs-header">
-      <h2 class="recs-title"><i class="fas fa-magic"></i> Recommended For You</h2>
-      <p class="recs-subtitle" id="recsSubtitle"></p>
-    </div>
-    <div class="results-grid" id="recsGrid"></div>
-  </section>
-
-  <!-- Results Section -->
-  <main class="results-section" id="resultsSection" style="display:none;">
-    <div class="results-bar">
-      <h2 id="resultsTitle">All Movies</h2>
-      <div class="results-actions">
-        <button class="btn-clear-all" id="clearAllBtn" style="display:none;" title="Clear all saved movies">
-          <i class="fas fa-trash"></i> Clear All
-        </button>
-        <div class="sort-wrap">
-          <label for="sortSelect">Sort</label>
-          <select id="sortSelect">
-            <option value="default">Relevance</option>
-            <option value="latest">Newest First</option>
-            <option value="oldest">Oldest First</option>
-            <option value="highest-rated">Highest Rated</option>
-            <option value="lowest-rated">Lowest Rated</option>
-          </select>
-        </div>
+  <!-- Home Trending  -->
+  <section class="trending-section" id="homeTrendingSection" style="display:none;">
+    <div class="trending-header">
+      <h2 class="trending-title"><i class="fas fa-fire"></i> Trending</h2>
+      <div class="trending-tabs">
+        <button class="trend-tab active" id="homeTabToday" onclick="switchHomeTrendingTab('day')">Today</button>
+        <button class="trend-tab" id="homeTabWeek" onclick="switchHomeTrendingTab('week')">This Week</button>
       </div>
     </div>
-    <div class="results-grid" id="resultsGrid"></div>
-  </main>
+    <div class="trending-grid" id="homeTrendingGrid"></div>
+  </section>
 
+  <!-- Content layout wrapper -->
+  
+  <div id="contentLayoutWrapper" style="display:none;">
+
+    <!-- Recommendations Strip -->
+    <section class="recs-strip" id="recsStrip" style="display:none;">
+      <div class="recs-strip-header">
+        <h2 class="recs-strip-title"><i class="fas fa-magic"></i> Recommended For You</h2>
+        <p class="recs-strip-subtitle" id="recsStripSubtitle"></p>
+      </div>
+      <div class="recs-strip-scroll" id="recsStripGrid"></div>
+    </section>
+
+    <!-- Sidebar + Results -->
+    <div class="content-layout" id="contentLayout">
+
+      <aside class="sidebar-trending" id="trendingSection">
+        <div class="sidebar-trending-header">
+          <h2 class="trending-title"><i class="fas fa-fire"></i> Trending</h2>
+          <div class="trending-tabs">
+            <button class="trend-tab active" id="tabToday" onclick="switchTrendingTab('day')">Today</button>
+            <button class="trend-tab" id="tabWeek" onclick="switchTrendingTab('week')">This Week</button>
+          </div>
+        </div>
+        <div class="sidebar-trending-list" id="trendingGrid"></div>
+      </aside>
+
+      <main class="results-section" id="resultsSection">
+        <div class="results-bar">
+          <h2 id="resultsTitle">All Movies</h2>
+          <div class="results-actions">
+            <button class="btn-clear-all" id="clearAllBtn" style="display:none;" title="Clear all saved movies">
+              <i class="fas fa-trash"></i> Clear All
+            </button>
+          </div>
+        </div>
+        <div class="results-grid" id="resultsGrid"></div>
+      </main>
+
+    </div>
+  </div>
+  
   <!-- Filter Panel -->
   <aside class="filter-panel" id="filterPanel">
     <div class="fp-header">
@@ -93,6 +121,31 @@
       <button id="closeFilterBtn"><i class="fas fa-times"></i></button>
     </div>
     <div class="fp-body">
+      <div class="fp-section">
+        <h4>Sort By</h4>
+        <div class="sort-options">
+          <label class="sort-option">
+            <input type="radio" name="sortOption" value="default" checked>
+            <span>Relevance</span>
+          </label>
+          <label class="sort-option">
+            <input type="radio" name="sortOption" value="latest">
+            <span>Newest First</span>
+          </label>
+          <label class="sort-option">
+            <input type="radio" name="sortOption" value="oldest">
+            <span>Oldest First</span>
+          </label>
+          <label class="sort-option">
+            <input type="radio" name="sortOption" value="highest-rated">
+            <span>Highest Rated</span>
+          </label>
+          <label class="sort-option">
+            <input type="radio" name="sortOption" value="lowest-rated">
+            <span>Lowest Rated</span>
+          </label>
+        </div>
+      </div>
       <div class="fp-section">
         <h4>Genres</h4>
         <div class="genre-checkboxes" id="genreFilters"></div>

@@ -6,6 +6,8 @@ let currentMovies  = [];
 let currentFilters = { genres: [], minYear: null, maxYear: null, minRating: 0, searchTerm: "" };
 let favorites      = JSON.parse(localStorage.getItem("cs_favorites") || "[]");
 let currentSort    = "default";
+let currentPage    = 1;
+let isFetching     = false;
 let currentView    = "home"; // "home" | "search" | "favorites"
 
 /* ─── Init ─── */
@@ -36,6 +38,7 @@ function bindEvents() {
   $("homeBtn").addEventListener("click", () => {
     currentView = "home";
     resetFiltersState();
+    $("contentLayoutWrapper").style.display = "none"; 
     showHome();
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
@@ -43,9 +46,22 @@ function bindEvents() {
     e.preventDefault();
     currentView = "home";
     resetFiltersState();
+    $("contentLayoutWrapper").style.display = "none"; 
     showHome();
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
+
+  // Navbar search
+  const navInput = $("navSearchInput");
+  navInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      $("searchInput").value = navInput.value;
+      doSearch();
+    }
+  });
+  $("searchInput").addEventListener("input", e => {
+  navInput.value = e.target.value;
+  }); 
 
   $("favoritesBtn").addEventListener("click", showFavorites);
 
@@ -55,15 +71,6 @@ function bindEvents() {
   $("fpOverlay").addEventListener("click", closeFilterPanel);
   $("applyFiltersBtn").addEventListener("click", applyFilters);
   $("resetFiltersBtn").addEventListener("click", resetFilters);
-
-  // Sort
-  $("sortSelect").addEventListener("change", e => {
-    currentSort = e.target.value;
-    if (currentView !== "home") {
-      currentMovies = sortMovies(currentMovies, currentSort);
-      renderResults();
-    }
-  });
 
   // Clear all favorites
   $("clearAllBtn").addEventListener("click", clearAllFavorites);
@@ -111,7 +118,7 @@ document.querySelectorAll(".chip").forEach(chip => {
     updateNavVisibility();
 
     $("hero").style.display = "none";
-    $("resultsSection").style.display = "block";
+    $("contentLayout").style.display = "flex";
     $("clearAllBtn").style.display = "none"; 
     $("resultsTitle").textContent = `Genre: ${genre}`;
     $("resultsGrid").innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading movies...</p></div>';
@@ -123,57 +130,154 @@ fetchMovies(currentFilters, currentSort).then(movies => {
     });
   });
 });
-} // ← closes bindEvents()
+} 
 
 /* ─── Core Views ─── */
-async function showHome() {
-  $("hero").style.display = "flex";
-  $("resultsSection").style.display = "none";
-  updateNavVisibility();
 
-  if (favorites.length > 0) {
-    await showRecommendations();
-  } else {
-    $("recommendationsSection").style.display = "none";
-  }
+function buildSkeletons(count = 10) {
+  return Array(count).fill(0).map(() => `
+    <div class="skeleton-card">
+      <div class="skeleton-poster"></div>
+      <div class="skeleton-info">
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short"></div>
+        <div class="skeleton-line xshort"></div>
+      </div>
+    </div>
+  `).join("");
 }
 
-async function showRecommendations() {
-  const section = $("recommendationsSection");
-  section.style.display = "block";
-  $("recsGrid").innerHTML = `
-    <div class="empty-state recommendation-loading">
-      <i class="fas fa-spinner fa-spin"></i>
-      <p>Finding picks for you…</p>
+function buildSidebarSkeletons(count = 10) {
+  return Array(count).fill(0).map(() => `
+    <div class="sidebar-skeleton">
+      <div class="sidebar-skeleton-rank"></div>
+      <div class="sidebar-skeleton-poster"></div>
+      <div class="sidebar-skeleton-info">
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short"></div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function buildSidebarCard(movie) {
+  const posterUrl = getPosterUrl(movie);
+  const posterEl = posterUrl
+    ? `<img src="${posterUrl}" alt="${movie.title.replace(/"/g, '&quot;')}" loading="lazy">`
+    : `<div class="sidebar-poster-fallback"><i class="fas fa-film"></i></div>`;
+
+  return `
+    <div class="sidebar-movie-item" data-id="${movie.id}">
+      <span class="sidebar-rank">${movie.rank}</span>
+      <div class="sidebar-poster">${posterEl}</div>
+      <div class="sidebar-info">
+        <p class="sidebar-title">${movie.title}</p>
+        <p class="sidebar-meta">${movie.year} &nbsp;·&nbsp; <i class="fas fa-star" style="color:var(--gold);font-size:.7rem;"></i> ${movie.imdbRating}</p>
+        <div class="sidebar-genres">
+          ${movie.genres.slice(0,1).map(g => `<span class="genre-pill">${g}</span>`).join("")}
+        </div>
+      </div>
     </div>`;
+}
 
-  const recs = await fetchRecommendations(favorites);
+async function showHome() {
+  $("hero").style.display = "flex";
+  $("contentLayoutWrapper").style.display = "none";
+  $("homeTrendingSection").style.display = "block";
+  updateNavVisibility();
+  await showHomeTrending('day');
+}
 
-  if (!recs.length) {
-    section.style.display = "none";
+async function showHomeTrending(timeWindow = 'day') {
+  const grid = $("homeTrendingGrid");
+  grid.innerHTML = buildSkeletons(10);
+
+  const movies = await fetchTrending(timeWindow);
+
+  if (!movies.length) {
+    $("homeTrendingSection").style.display = "none";
     return;
   }
 
-  // Find the top genre for the subtitle
+  grid.innerHTML = movies.map(m => buildTrendingCard(m)).join("");
+
+  grid.querySelectorAll(".movie-card").forEach(card => {
+    card.addEventListener("click", e => {
+      if (!e.target.closest(".save-btn")) openModal(+card.dataset.id);
+    });
+  });
+
+  grid.querySelectorAll(".save-btn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const id = +btn.dataset.id;
+      const movie = movies.find(m => m.id === id);
+      if (movie) toggleFavorite(movie);
+      const isSaved = favorites.some(f => f.id === id);
+      btn.classList.toggle("active", isSaved);
+      btn.querySelector("i").className = isSaved ? "fas fa-bookmark" : "far fa-bookmark";
+      updateFavBadge();
+    });
+  });
+}
+
+function switchHomeTrendingTab(timeWindow) {
+  $("homeTabToday").classList.toggle("active", timeWindow === 'day');
+  $("homeTabWeek").classList.toggle("active", timeWindow === 'week');
+  showHomeTrending(timeWindow);
+}
+
+async function showTrending(timeWindow = 'day') {
+  const grid = $("trendingGrid");
+  grid.innerHTML = buildSidebarSkeletons();
+
+  const movies = await fetchTrending(timeWindow);
+
+  if (!movies.length) return;
+
+  grid.innerHTML = movies.map(m => buildSidebarCard(m)).join("");
+
+  grid.querySelectorAll(".sidebar-movie-item").forEach(item => {
+    item.addEventListener("click", () => openModal(+item.dataset.id));
+  });
+}
+
+async function showRecsStrip() {
+  if (favorites.length === 0) {
+    $("recsStrip").style.display = "none";
+    return;
+  }
+
+  const strip = $("recsStrip");
+  const grid = $("recsStripGrid");
+  strip.style.display = "block";
+  grid.innerHTML = buildHorizontalSkeletons(8);
+
+  const recs = await fetchRecommendations(favorites, 12);
+
+  if (!recs.length) {
+    strip.style.display = "none";
+    return;
+  }
+
+  // Build subtitle from top genre
   const genreCounts = {};
   favorites.forEach(m => m.genres.forEach(g => {
     genreCounts[g] = (genreCounts[g] || 0) + 1;
   }));
   const topGenre = Object.entries(genreCounts)
     .sort((a, b) => b[1] - a[1])[0]?.[0] || "";
+  $("recsStripSubtitle").textContent = `Based on your saved ${topGenre} films`;
 
-  $("recsSubtitle").textContent = `Based on your saved ${topGenre} films`;
-  $("recsGrid").innerHTML = recs.map(m => buildCard(m)).join("");
+  grid.innerHTML = recs.map(m => buildStripCard(m)).join("");
 
-  // Wire up card clicks
-  $("recsGrid").querySelectorAll(".movie-card").forEach(card => {
+  grid.querySelectorAll(".strip-card").forEach(card => {
     card.addEventListener("click", e => {
       if (!e.target.closest(".save-btn")) openModal(+card.dataset.id);
     });
   });
 
-  // Wire up save buttons
-  $("recsGrid").querySelectorAll(".save-btn").forEach(btn => {
+  grid.querySelectorAll(".save-btn").forEach(btn => {
     btn.addEventListener("click", e => {
       e.stopPropagation();
       const id = +btn.dataset.id;
@@ -187,22 +291,154 @@ async function showRecommendations() {
   });
 }
 
+function buildHorizontalSkeletons(count = 8) {
+  return Array(count).fill(0).map(() => `
+    <div class="strip-skeleton">
+      <div class="strip-skeleton-poster"></div>
+      <div class="strip-skeleton-line"></div>
+      <div class="strip-skeleton-line short"></div>
+    </div>
+  `).join("");
+}
+
+function buildStripCard(movie) {
+  const saved = favorites.some(f => f.id === movie.id);
+  const posterUrl = getPosterUrl(movie);
+  const posterEl = posterUrl
+    ? `<img src="${posterUrl}" alt="${movie.title.replace(/"/g, '&quot;')}" loading="lazy">`
+    : `<div class="strip-poster-fallback"><i class="fas fa-film"></i></div>`;
+
+  return `
+    <div class="strip-card" data-id="${movie.id}">
+      <div class="strip-poster">
+        ${posterEl}
+        <button class="save-btn ${saved ? "active" : ""}" data-id="${movie.id}">
+          <i class="${saved ? "fas" : "far"} fa-bookmark"></i>
+        </button>
+      </div>
+      <p class="strip-title" title="${movie.title}">${movie.title}</p>
+      <p class="strip-meta">${movie.year} &nbsp;·&nbsp; <i class="fas fa-star" style="color:var(--gold);font-size:.65rem;"></i> ${movie.imdbRating}</p>
+    </div>`;
+}
+
+function switchTrendingTab(timeWindow) {
+  $("tabToday").classList.toggle("active", timeWindow === 'day');
+  $("tabWeek").classList.toggle("active", timeWindow === 'week');
+  showTrending(timeWindow);
+}
+
+function buildTrendingCard(movie) {
+  const saved     = favorites.some(f => f.id === movie.id);
+  const posterUrl = getPosterUrl(movie);
+  const posterEl  = posterUrl
+    ? `<img src="${posterUrl}" alt="${movie.title.replace(/"/g, '&quot;')}" loading="lazy" onerror="this.outerHTML=fallbackPoster(this.alt)">`
+    : fallbackPoster(movie.title);
+
+  return `
+    <div class="movie-card trending-card" data-id="${movie.id}">
+      <div class="card-poster">
+        ${posterEl}
+        <div class="rank-badge">${movie.rank}</div>
+        <div class="card-overlay">
+          <p class="card-overlay-text">${movie.plot}</p>
+        </div>
+        <button class="save-btn ${saved ? "active" : ""}" data-id="${movie.id}">
+          <i class="${saved ? "fas" : "far"} fa-bookmark"></i>
+        </button>
+      </div>
+      <div class="card-info">
+        <p class="card-title" title="${movie.title}">${movie.title}</p>
+        <div class="card-meta">
+          <span>${movie.year}</span>
+          <span class="card-rating"><i class="fas fa-star"></i>${movie.imdbRating}</span>
+        </div>
+        <div class="card-genres">
+          ${movie.genres.slice(0,2).map(g => `<span class="genre-pill">${g}</span>`).join("")}
+        </div>
+      </div>
+    </div>`;
+}
+
 async function doSearch() {
   const term = $("searchInput").value.trim();
   currentFilters.searchTerm = term;
   currentView = "search";
+  currentPage = 1;
+  currentMovies = [];
   updateNavVisibility();
 
   $("hero").style.display = "none";
-  $("resultsSection").style.display = "block";
+  $("homeTrendingSection").style.display = "none";
+  $("contentLayoutWrapper").style.display = "block"; // CHANGED
+  $("contentLayout").style.display = "flex";
   $("resultsTitle").textContent = "Loading...";
-  $("resultsGrid").innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Loading movies...</p></div>';
-  $("clearAllBtn").style.display = "none"; 
+  $("resultsGrid").innerHTML = buildSkeletons();
+  $("clearAllBtn").style.display = "none";
 
-  currentMovies = await fetchMovies(currentFilters, currentSort);
+  const [movies] = await Promise.all([
+    fetchMovies(currentFilters, currentSort, currentPage),
+    showTrending('day'),
+    showRecsStrip()        // ADD THIS
+  ]);
 
+  currentMovies = movies;
   $("resultsTitle").textContent = term ? `Results for "${term}"` : "All Movies";
   renderResults();
+}
+
+async function loadMore() {
+  if (isFetching) return;
+  isFetching = true;
+
+  const btn = $("loadMoreBtn");
+  if (btn) {
+    btn.textContent = "Loading...";
+    btn.disabled = true;
+  }
+
+  currentPage++;
+  const newMovies = await fetchMovies(currentFilters, currentSort, currentPage);
+
+  if (!newMovies.length) {
+    if (btn) btn.remove();
+    isFetching = false;
+    return;
+  }
+
+  currentMovies = [...currentMovies, ...newMovies];
+
+  // Append new cards without wiping the grid
+  const grid = $("resultsGrid");
+  const temp = document.createElement("div");
+  temp.innerHTML = newMovies.map(m => buildCard(m)).join("");
+
+  temp.querySelectorAll(".movie-card").forEach(card => {
+    card.addEventListener("click", e => {
+      if (!e.target.closest(".save-btn")) openModal(+card.dataset.id);
+    });
+    grid.appendChild(card);
+  });
+
+  // Re-bind all save buttons
+  grid.querySelectorAll(".save-btn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation();
+      const id = +btn.dataset.id;
+      const movie = currentMovies.find(m => m.id === id);
+      if (movie) toggleFavorite(movie);
+      const isSaved = favorites.some(f => f.id === id);
+      btn.classList.toggle("active", isSaved);
+      btn.querySelector("i").className = isSaved ? "fas fa-bookmark" : "far fa-bookmark";
+      updateFavBadge();
+    });
+  });
+
+  if (btn) {
+    btn.textContent = "Load More";
+    btn.disabled = false;
+  }
+
+  isFetching = false;
 }
 
 function showFavorites() {
@@ -210,9 +446,16 @@ function showFavorites() {
   updateNavVisibility();
   currentMovies = sortMovies(favorites, currentSort);
   $("hero").style.display = "none";
-  $("resultsSection").style.display = "block";
+  $("homeTrendingSection").style.display = "none";
+  $("contentLayoutWrapper").style.display = "block"; // CHANGED
+  $("contentLayout").style.display = "flex";
+  $("recsStrip").style.display = "none"; // hide recs on favorites
   $("resultsTitle").textContent = `Saved Movies (${currentMovies.length})`;
-  $("clearAllBtn").style.display = "flex"; 
+  $("clearAllBtn").style.display = "flex";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  const existingBtn = $("loadMoreBtn");
+  if (existingBtn) existingBtn.remove();
+  showTrending('day');
   renderResults();
 }
 
@@ -251,6 +494,18 @@ function renderResults() {
       if (currentView === "favorites") showFavorites();
     });
   });
+
+  const existingBtn = $("loadMoreBtn");
+  if (existingBtn) existingBtn.remove();
+
+  if (currentView !== "favorites") {
+    const loadBtn = document.createElement("button");
+    loadBtn.id = "loadMoreBtn";
+    loadBtn.className = "load-more-btn";
+    loadBtn.textContent = "Load More";
+    loadBtn.addEventListener("click", loadMore);
+    $("resultsSection").appendChild(loadBtn);
+  }
 }
 
 function buildCard(movie) {
@@ -323,7 +578,9 @@ let trailerHTML = '';
   }
 
   $("modalContent").innerHTML = `
-    <div class="modal-poster-col">${posterEl}</div>
+    <div class="modal-poster-col">
+      ${posterEl}
+    </div>
     <div class="modal-info-col">
       <h2 class="modal-title">${movie.title}</h2>
       <div class="modal-tags">
@@ -376,12 +633,6 @@ function toggleFavorite(movie) {
   }
   localStorage.setItem("cs_favorites", JSON.stringify(favorites));
   updateFavBadge();
-
-  // Refresh recommendations live if on home
-  if (currentView === "home") {
-    if (favorites.length > 0) showRecommendations();
-    else $("recommendationsSection").style.display = "none";
-  }
 }
 
 function loadFavorites() {
@@ -433,11 +684,13 @@ function populateGenreFilters() {
 }
 
 function applyFilters() {
-  const selected = [...document.querySelectorAll("#genreFilters input:checked")].map(c => c.value);
-  const minYear  = $("minYear").value  ? +$("minYear").value  : null;
-  const maxYear  = $("maxYear").value  ? +$("maxYear").value  : null;
-  const minRating= +$("minRating").value;
+  const selected  = [...document.querySelectorAll("#genreFilters input:checked")].map(c => c.value);
+  const minYear   = $("minYear").value  ? +$("minYear").value  : null;
+  const maxYear   = $("maxYear").value  ? +$("maxYear").value  : null;
+  const minRating = +$("minRating").value;
+  const sortVal   = document.querySelector('input[name="sortOption"]:checked')?.value || "default";
 
+  currentSort = sortVal;
   currentFilters = { genres: selected, minYear, maxYear, minRating, searchTerm: currentFilters.searchTerm };
   closeFilterPanel();
   doSearch();
@@ -449,15 +702,18 @@ function resetFilters() {
   $("maxYear").value    = "";
   $("minRating").value  = 0;
   $("ratingValue").textContent = 0;
+  const defaultRadio = document.querySelector('input[name="sortOption"][value="default"]');
+  if (defaultRadio) defaultRadio.checked = true;
   resetFiltersState();
   closeFilterPanel();
 }
 
 function resetFiltersState() {
   currentFilters = { genres: [], minYear: null, maxYear: null, minRating: 0, searchTerm: "" };
-  $("searchInput").value   = "";
-  $("sortSelect").value    = "default";
+  $("searchInput").value = "";
   currentSort = "default";
+  const defaultRadio = document.querySelector('input[name="sortOption"][value="default"]');
+  if (defaultRadio) defaultRadio.checked = true;
 }
 
 /* ─── Theme ─── */
@@ -510,11 +766,17 @@ function sortMovies(movies, sortBy) {
 
 function updateNavVisibility() {
   const navActions = document.querySelector(".nav-actions");
+  const navSearchWrap = $("navSearchWrap");
+
   if (currentView === "home") {
     navActions.style.opacity = "0";
     navActions.style.pointerEvents = "none";
+    navSearchWrap.classList.remove("visible");
   } else {
     navActions.style.opacity = "1";
     navActions.style.pointerEvents = "all";
+    navSearchWrap.classList.add("visible");
+    // Sync whatever was searched
+    $("navSearchInput").value = $("searchInput").value;
   }
 }
