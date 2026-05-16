@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   
   await fetchGenres();
   populateGenreFilters();
+  populateGenreDropdown();
   
   updateFavBadge();
   updateNavVisibility();
@@ -36,10 +37,11 @@ function bindEvents() {
 
   // Nav
   $("homeBtn").addEventListener("click", () => {
-    currentView = "home";
     resetFiltersState();
-    $("contentLayoutWrapper").style.display = "none"; 
-    showHome();
+    $("searchInput").value = "";
+    const navInput = $("navSearchInput");
+    if (navInput) navInput.value = "";
+    doSearch();
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
   $("homeLogoBtn").addEventListener("click", e => {
@@ -71,6 +73,31 @@ function bindEvents() {
   $("fpOverlay").addEventListener("click", closeFilterPanel);
   $("applyFiltersBtn").addEventListener("click", applyFilters);
   $("resetFiltersBtn").addEventListener("click", resetFilters);
+
+  // Genre dropdown
+  $("genreDropdownBtn").addEventListener("click", e => {
+    e.stopPropagation();
+    $("genreDropdown").classList.toggle("open");
+  });
+  $("genreDropdownMenu").addEventListener("click", e => {
+    const button = e.target.closest("button[data-genre]");
+    if (!button) return;
+    const genre = button.dataset.genre;
+    $("genreDropdown").classList.remove("open");
+    resetFiltersState();
+    if (genre !== "all") {
+      currentFilters.genres = [genre];
+    }
+    $("searchInput").value = "";
+    const navInput = $("navSearchInput");
+    if (navInput) navInput.value = "";
+    doSearch();
+  });
+  document.addEventListener("click", e => {
+    if (!e.target.closest("#genreDropdown")) {
+      $("genreDropdown").classList.remove("open");
+    }
+  });
 
   // Clear all favorites
   $("clearAllBtn").addEventListener("click", clearAllFavorites);
@@ -382,7 +409,13 @@ async function doSearch() {
   ]);
 
   currentMovies = movies;
-  $("resultsTitle").textContent = term ? `Results for "${term}"` : "All Movies";
+  if (term) {
+    $("resultsTitle").textContent = `Results for "${term}"`;
+  } else if (currentFilters.genres && currentFilters.genres.length) {
+    $("resultsTitle").textContent = `Genre: ${currentFilters.genres[0]}`;
+  } else {
+    $("resultsTitle").textContent = "All Movies";
+  }
   renderResults();
 }
 
@@ -451,7 +484,7 @@ function showFavorites() {
   $("contentLayout").style.display = "flex";
   $("recsStrip").style.display = "none"; // hide recs on favorites
   $("resultsTitle").textContent = `Saved Movies (${currentMovies.length})`;
-  $("clearAllBtn").style.display = "flex";
+  $("clearAllBtn").style.display = favorites.length > 0 ? "flex" : "none";
   window.scrollTo({ top: 0, behavior: "smooth" });
   const existingBtn = $("loadMoreBtn");
   if (existingBtn) existingBtn.remove();
@@ -601,8 +634,10 @@ let trailerHTML = '';
           ${movie.platforms.length ? movie.platforms.map(p => `<span class="chip-sm chip-platform">${p}</span>`).join("") : '<span>Unavailable / Unknown</span>'}
         </div>
       </div>
+    </div>
+    <div class="modal-media-col">
       ${trailerHTML}
-      <button class="modal-save-btn ${saved ? "active" : ""}" id="modalSaveBtn" data-id="${id}" style="margin-top: 1rem;">
+      <button class="modal-save-btn ${saved ? "active" : ""}" id="modalSaveBtn" data-id="${id}">
         <i class="${saved ? "fas" : "far"} fa-bookmark"></i>
         ${saved ? "Remove from Saved" : "Save Movie"}
       </button>
@@ -676,11 +711,22 @@ function closeFilterPanel() {
 
 function populateGenreFilters() {
   const container = $("genreFilters");
+  if (!container) return;
   container.innerHTML = getAllGenres().map(g => `
     <label class="g-label">
       <input type="checkbox" value="${g}">
       <span>${g}</span>
     </label>`).join("");
+}
+
+function populateGenreDropdown() {
+  const container = $("genreDropdownMenu");
+  if (!container) return;
+  const genres = ["All Genres", ...getAllGenres()];
+  container.innerHTML = genres.map(g => {
+    const value = g === "All Genres" ? "all" : g;
+    return `<button type="button" class="dropdown-item" data-genre="${value}">${g}</button>`;
+  }).join("");
 }
 
 function applyFilters() {

@@ -121,6 +121,57 @@ body {
   color: var(--text);
 }
 
+.nav-dropdown {
+  position: relative;
+}
+
+.nav-dropdown-toggle {
+  justify-content: space-between;
+  min-width: 8rem;
+}
+
+.nav-dropdown .dropdown-icon {
+  font-size: .75rem;
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + .5rem);
+  width: 220px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 20px 40px rgba(0,0,0,.12);
+  padding: .5rem .35rem;
+  display: none;
+  z-index: 950;
+}
+
+.nav-dropdown.open .nav-dropdown-menu {
+  display: block;
+}
+
+.dropdown-item {
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text);
+  text-align: left;
+  padding: .65rem .75rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: .9rem;
+  transition: background .2s, color .2s;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+  background: rgba(255,255,255,.08);
+  color: var(--text);
+}
+
 /* =============================================
    NAVBAR SEARCH
    ============================================= */
@@ -779,6 +830,15 @@ body {
 .sidebar-trending-header .trending-title {
   font-size: 1.4rem;
   margin-bottom: .6rem;
+}
+
+.sidebar-trending-header .trending-tabs {
+  width: 100%;
+}
+
+.sidebar-trending-header .trend-tab {
+  flex: 1;
+  text-align: center;
 }
 
 /* Sidebar movie items */

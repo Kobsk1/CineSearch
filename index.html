@@ -30,6 +30,13 @@
         <button class="nav-btn" id="homeBtn" title="Home">
           <i class="fas fa-home"></i><span>Home</span>
         </button>
+        <div class="nav-dropdown" id="genreDropdown">
+          <button class="nav-btn nav-dropdown-toggle" id="genreDropdownBtn" title="Select Genre">
+            <i class="fas fa-tags"></i><span>Genres</span>
+            <i class="fas fa-chevron-down dropdown-icon"></i>
+          </button>
+          <div class="nav-dropdown-menu" id="genreDropdownMenu"></div>
+        </div>
         <button class="nav-btn" id="favoritesBtn" title="Favorites">
           <i class="fas fa-bookmark"></i><span>Saved</span>
           <span class="fav-badge" id="favoritesCount">0</span>
@@ -103,8 +110,8 @@
         <div class="results-bar">
           <h2 id="resultsTitle">All Movies</h2>
           <div class="results-actions">
-            <button class="btn-clear-all" id="clearAllBtn" style="display:none;" title="Clear all saved movies">
-              <i class="fas fa-trash"></i> Clear All
+            <button class="btn-clear-all" id="clearAllBtn" style="display:none;" title="Clear saved movies">
+              <i class="fas fa-trash"></i> Clear
             </button>
           </div>
         </div>
@@ -145,10 +152,6 @@
             <span>Lowest Rated</span>
           </label>
         </div>
-      </div>
-      <div class="fp-section">
-        <h4>Genres</h4>
-        <div class="genre-checkboxes" id="genreFilters"></div>
       </div>
       <div class="fp-section">
         <h4>Year Range</h4>
