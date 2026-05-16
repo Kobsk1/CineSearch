@@ -365,7 +365,6 @@ function buildTrendingCard(movie) {
     <div class="movie-card trending-card" data-id="${movie.id}">
       <div class="card-poster">
         ${posterEl}
-        <div class="rank-badge">${movie.rank}</div>
         <div class="card-overlay">
           <p class="card-overlay-text">${movie.plot}</p>
         </div>
