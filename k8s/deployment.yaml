@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cinesearch-deployment          # Clear, project-specific name
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: cinesearch                  # Updated label to match project
+  template:
+    metadata:
+      labels:
+        app: cinesearch
+    spec:
+      containers:
+      - name: cinesearch-container
+        image: mt-06-cinesearch:v1     # Lab 06 format: mt-06-[name]:v1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
