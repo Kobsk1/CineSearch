@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cinesearch-config
+  namespace: cinesearch
+data:
+  DB_HOST: "mysql-service"
+  DB_NAME: "cinesearch_db"
+  DB_USER: "root"
+  PORT:    "3000"
