@@ -7,6 +7,10 @@ const API_BASE = (() => {
   if (window.location.port === '8080' || window.location.port === '80') {
     return `${window.location.origin}/api`;
   }
+  // Kubernetes NodePort scenario: frontend on 30007, backend on 30008
+  if (window.location.port === '30007') {
+    return `http://${window.location.hostname}:30008/api`;
+  }
   return 'http://localhost:3000/api';
 })();
 
